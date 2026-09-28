@@ -38,3 +38,7 @@ cops       text eol=lf
 *.ico   binary
 *.woff2 binary
 *.pdf   binary
+
+# CoderHub: VERSION es nuestra (coderhub-vX.Y.Z); los syncs de upstream no la pisan.
+# Requiere `git config merge.ours.driver true` en el clon que mergea.
+VERSION merge=ours

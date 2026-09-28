@@ -113,9 +113,9 @@ function isLegacyReexec() {
   }
 }
 
-const CANONICAL_REPO = 'https://github.com/career-ops-hq/career-ops.git';
-const RAW_VERSION_URL = 'https://raw.githubusercontent.com/career-ops-hq/career-ops/main/VERSION';
-const RELEASES_API = 'https://api.github.com/repos/career-ops-hq/career-ops/releases/latest';
+const CANONICAL_REPO = 'https://github.com/coderhub-os/coderhub.git';
+const RAW_VERSION_URL = 'https://raw.githubusercontent.com/coderhub-os/coderhub/main/VERSION';
+const RELEASES_API = 'https://api.github.com/repos/coderhub-os/coderhub/releases/latest';
 
 // Matches a semver, with or without a leading `v` and an optional
 // Release Please component prefix (e.g. `career-ops-v1.9.0` → `1.9.0`).
@@ -2018,14 +2018,14 @@ function resolveChannel(argv, env) {
 
 // release-please-config.json also releases a sibling `web` component, tagged
 // `web-vX.Y.Z` — see resolveTargetRef()'s doc comment for why this matters.
-const RELEASE_TAG_PREFIX = 'career-ops-v';
+const RELEASE_TAG_PREFIX = 'coderhub-v';
 
 // The whole tag, anchored at both ends. SEMVER_RE is suffix-anchored (it has
 // to be, to read `career-ops-v1.9.0` and `v1.9.0` alike), so the prefix check
 // plus SEMVER_RE on its own let `career-ops-vpreview-v1.32.0` through: right
 // prefix, and a valid `-v1.32.0` suffix. A release tag is exactly the prefix
 // followed by X.Y.Z, nothing between.
-export const RELEASE_TAG_RE = new RegExp(`^${RELEASE_TAG_PREFIX}(\\d+\\.\\d+\\.\\d+)$`);
+export const RELEASE_TAG_RE = new RegExp(`^(?:${RELEASE_TAG_PREFIX}|career-ops-v)(\\d+\\.\\d+\\.\\d+)$`);
 
 /**
  * The version a career-ops release tag names (`career-ops-v1.33.0` → `1.33.0`),
@@ -2287,7 +2287,7 @@ async function checkMainChannel(local, marker, runCurlGet) {
   // deliberately conservative: version checks still work offline/behind a
   // restricted git transport.
   try { localCommit = gitQuiet('rev-parse', 'HEAD'); } catch { /* no git checkout */ }
-  const remoteRef = await runCurlGet('https://api.github.com/repos/career-ops-hq/career-ops/git/ref/heads/main', [
+  const remoteRef = await runCurlGet('https://api.github.com/repos/coderhub-os/coderhub/git/ref/heads/main', [
     '--header', 'Accept: application/vnd.github+json',
     '--header', 'User-Agent: career-ops-update-checker',
   ]);
