@@ -1,5 +1,5 @@
 ---
-name: career-ops
+name: coderhub
 description: >-
   AI job search command center -- evaluate offers, generate CVs, scan portals,
   track applications. Use when the user pastes a job URL or JD, asks to scan
