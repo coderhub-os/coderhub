@@ -1,0 +1,197 @@
+# coderhub (A4): weekly upstream sync. Not an upstream file; see .github/DIVERGENCIAS.md.
+#
+# Merges career-ops-hq/career-ops main into a bot branch cut from `next`, runs the
+# suite, and opens (or refreshes) one PR to `next` for review. It never pushes to
+# `next` or `main`.
+#
+# The merge happens here, not in GitHub's PR merge, because GitHub ignores custom
+# merge drivers: `VERSION` and `README*.md` resolve to ours only with
+# `merge.ours.driver true` set in a real git checkout.
+#
+# Pushes use a GitHub App token: GITHUB_TOKEN cannot push commits that touch
+# .github/workflows/ (upstream does so almost weekly), and PRs it opens do not
+# trigger the Tests workflow.
+#
+# Every value that comes from upstream (VERSION, file names) reaches `run:` only
+# through `env:`, never through `${{ }}` inline.
+name: CoderHub upstream sync
+
+on:
+  schedule:
+    - cron: '0 12 * * 5' # Fridays 09:00 ART
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coderhub-sync
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_URL: https://github.com/career-ops-hq/career-ops.git
+  SYNC_BRANCH: coderhub/sync-upstream
+  BASE_BRANCH: next
+  REVIEWER: arielmirra
+  CONFLICT_TITLE: '[sync] Conflictos con upstream'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: App token
+        id: app
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.CODERHUB_SYNC_CLIENT_ID }}
+          private-key: ${{ secrets.CODERHUB_SYNC_PRIVATE_KEY }}
+
+      # The suite runs upstream code; keep the push token out of .git/config.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.BASE_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Configure git
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
+        run: |
+          bot_id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          git config merge.ours.driver true
+
+      # Tags live only in this runner: the harness needs career-ops-v* as old releases.
+      - name: Fetch upstream
+        id: upstream
+        run: |
+          git remote add upstream "$UPSTREAM_URL"
+          git fetch upstream main --tags
+          version=$(git show upstream/main:VERSION | head -n1 | awk '{print $1}')
+          if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Unexpected upstream VERSION: $version"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse upstream/main)" >> "$GITHUB_OUTPUT"
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "uptodate=true" >> "$GITHUB_OUTPUT"
+            echo "next already contains upstream/main; nothing to do."
+          fi
+
+      - name: Merge upstream into a sync branch
+        id: merge
+        if: steps.upstream.outputs.uptodate != 'true'
+        env:
+          VERSION: ${{ steps.upstream.outputs.version }}
+        run: |
+          base_sha=$(git rev-parse HEAD)
+          git checkout -b "$SYNC_BRANCH"
+          if git merge --no-ff upstream/main -m "chore(sync): merge upstream career-ops v${VERSION}"; then
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+            {
+              echo 'new_workflows<<EOF'
+              git diff --name-only --diff-filter=A "$base_sha" HEAD -- .github/workflows
+              echo EOF
+              echo 'new_readmes<<EOF'
+              git diff --name-only --diff-filter=A "$base_sha" HEAD -- 'README*.md'
+              echo EOF
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo 'conflicts<<EOF'
+              git diff --name-only --diff-filter=U
+              echo EOF
+            } >> "$GITHUB_OUTPUT"
+            git merge --abort
+          fi
+
+      - name: Report conflicts
+        if: steps.merge.outcome == 'success' && steps.merge.outputs.clean != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          VERSION: ${{ steps.upstream.outputs.version }}
+          SHA: ${{ steps.upstream.outputs.sha }}
+          CONFLICTS: ${{ steps.merge.outputs.conflicts }}
+        run: |
+          body=$(printf '%s\n' \
+            "El merge de upstream career-ops v${VERSION} (\`${SHA:0:8}\`) en \`${BASE_BRANCH}\` tiene conflictos que \`merge=ours\` no resuelve:" \
+            "" \
+            "$(printf '%s\n' "$CONFLICTS" | sed 's/^/- `/; s/$/`/')" \
+            "" \
+            "Resolvelo local siguiendo \`.github/DIVERGENCIAS.md\` (sección \"Sync con upstream\") y abrí el PR a \`${BASE_BRANCH}\` a mano." \
+            "" \
+            "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")
+          issue=$(gh issue list --state open --search "in:title \"$CONFLICT_TITLE\"" --json number --jq '.[0].number')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "$body"
+          else
+            gh issue create --title "$CONFLICT_TITLE" --assignee "$REVIEWER" --body "$body"
+          fi
+          echo "::error::Merge conflicts with upstream; see the issue."
+          exit 1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: steps.merge.outputs.clean == 'true'
+        with:
+          node-version: '24'
+      - uses: actions/setup-go@v7
+        if: steps.merge.outputs.clean == 'true'
+        with:
+          go-version: '1.27' # old updaters rebuild the dashboard during apply
+
+      - name: Tests
+        id: tests
+        if: steps.merge.outputs.clean == 'true'
+        continue-on-error: true
+        run: |
+          npm install --ignore-scripts
+          node test-all.mjs --quick
+          node updater-migration-tests.mjs
+          node upgrade-tests.mjs --pr-gate
+
+      - name: Push sync branch and open PR
+        if: steps.merge.outputs.clean == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          VERSION: ${{ steps.upstream.outputs.version }}
+          SHA: ${{ steps.upstream.outputs.sha }}
+          TESTS: ${{ steps.tests.outcome }}
+          NEW_WORKFLOWS: ${{ steps.merge.outputs.new_workflows }}
+          NEW_READMES: ${{ steps.merge.outputs.new_readmes }}
+        run: |
+          # Only the bot branch is ever force-pushed; next/main are never touched.
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${SYNC_BRANCH}"
+
+          if [ "$TESTS" = success ]; then tests_line="Tests en el job de sync: OK."; else tests_line="**Tests en el job de sync: FALLARON.** Mirá el run antes de mergear."; fi
+          list() { if [ -n "$1" ]; then printf '%s\n' "$1" | sed 's/^/  - `/; s/$/`/'; else echo "  - ninguno"; fi; }
+          body=$(printf '%s\n' \
+            "Merge de upstream career-ops v${VERSION} (\`${SHA:0:8}\`) en \`${BASE_BRANCH}\`, con \`merge.ours.driver\` (\`VERSION\` y \`README*.md\` quedan nuestros)." \
+            "" \
+            "$tests_line" \
+            "" \
+            "Antes de mergear (ver \`.github/DIVERGENCIAS.md\`):" \
+            "- Workflows nuevos de upstream: desactivarlos después del merge (X2)." \
+            "$(list "$NEW_WORKFLOWS")" \
+            "- READMEs nuevos de upstream: reemplazarlos por el stub (D10)." \
+            "$(list "$NEW_READMES")" \
+            "" \
+            "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")
+          title="chore(sync): upstream career-ops v${VERSION}"
+
+          pr=$(gh pr list --head "$SYNC_BRANCH" --base "$BASE_BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$pr" ]; then
+            gh pr edit "$pr" --title "$title" --body "$body"
+          else
+            draft=""; [ "$TESTS" = success ] || draft="--draft"
+            gh pr create --base "$BASE_BRANCH" --head "$SYNC_BRANCH" --title "$title" --body "$body" --reviewer "$REVIEWER" $draft
+          fi
+
+          issue=$(gh issue list --state open --search "in:title \"$CONFLICT_TITLE\"" --json number --jq '.[0].number')
+          if [ -n "$issue" ]; then
+            gh issue close "$issue" --comment "Resuelto: el sync de v${VERSION} mergeó limpio."
+          fi
+
+          if [ "$TESTS" != success ]; then echo "::error::Tests failed on the sync branch."; exit 1; fi

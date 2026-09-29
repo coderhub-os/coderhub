@@ -37,9 +37,10 @@ Los parches en código van entre marcadores `coderhub:start <nombre>` / `coderhu
 | A1 | `modes/_coderhub.md`, entrada en `SYSTEM_PATHS` de `update-system.mjs` | A | Capa de voz, idioma y nombre. Rige todo lo visible, no toca reglas duras ni datos. Va en SYSTEM_PATHS para que el updater la mande a los clientes. | La entrada en SYSTEM_PATHS es la única línea que puede chocar. El guard lo verifica. |
 | A2 | `tests/coderhub-guards.test.mjs` | A | Los guards de arriba. `test-all.mjs` lo descubre solo. | — |
 | A3 | `.github/DIVERGENCIAS.md` | A | Este archivo. | — |
+| A4 | `.github/workflows/coderhub-sync.yml` | A | Sync semanal (viernes 9:00 ART, más `workflow_dispatch`). Mergea `upstream/main` en la rama `coderhub/sync-upstream` cortada de `next`, con `merge.ours.driver true`, corre la suite y abre o actualiza un PR a `next` con review de arielmirra (en draft si fallan los tests). Si hay conflictos que `merge=ours` no resuelve, no pushea nada y abre o comenta el issue `[sync] Conflictos con upstream`, asignado a arielmirra. Pushea con la GitHub App `coderhub-sync` de la org (var `CODERHUB_SYNC_CLIENT_ID`, secret `CODERHUB_SYNC_PRIVATE_KEY`), porque `GITHUB_TOKEN` no puede pushear cambios en `.github/workflows/` y sus PRs no disparan `Tests`. El cron corre solo desde `main`. | — |
 | D16 | `.github/workflows/test.yml` | D | `pull_request.branches: [main, next]`. El job `upgrade-gate` baja los tags `career-ops-v*` de upstream antes del harness (bloque `upstream-tags`). El repo del motor no tiene esos tags, para que "career-ops" no aparezca en Tags ni Releases, y los tags viven solo en el runner (opción A). | Re-aplicá la rama y el bloque. |
 | X1 | `test-all.mjs` (bloque `sponsors-check`, check #76) | X | El chequeo de `.github/scripts/sponsors.mjs --check` queda apagado (`const r = { status: 0 }`): el README en español no tiene la sección Sponsors de upstream. | Re-poné el bloque. Si upstream mueve el check, buscá `sponsors.mjs', '--check'`. |
-| X2 | Workflows de GitHub Actions | X | 24 workflows apagados en el repo (upstream tiene más de los 23 del plan). Solo `Tests` queda activo. Dependabot sigue activo. | Después de cada sync que agregue un workflow, apagalo: `gh workflow disable <nombre> --repo coderhub-os/coderhub`. Está en el checklist de release. |
+| X2 | Workflows de GitHub Actions | X | 24 workflows apagados en el repo (upstream tiene más de los 23 del plan). Solo `Tests` y `CoderHub upstream sync` (A4) quedan activos. Dependabot sigue activo. | Después de cada sync que agregue un workflow, apagalo: `gh workflow disable <nombre> --repo coderhub-os/coderhub`. Está en el checklist de release. |
 | ~~D13~~ | `.gitignore` | — | **Revertida.** Igual que upstream: los datos del cliente no se versionan. | — |
 
 ## Pendientes conocidos (el cliente casi no los ve)
@@ -53,6 +54,8 @@ Los parches en código van entre marcadores `coderhub:start <nombre>` / `coderhu
 - **Rate limit:** `RELEASES_API` usa la API de GitHub sin auth (60 pedidos/hora por IP). Si un cliente chequea updates muchas veces seguidas, puede fallar hasta que se resetee.
 
 ## Sync con upstream
+
+El job `coderhub-sync.yml` (A4) hace los pasos 1 a 4 cada viernes y deja un PR. A mano:
 
 1. `git config merge.ours.driver true` (una vez por clon; el job de sync lo hace solo).
 2. `git fetch upstream --tags` y mergeá `upstream/main` en `next`.
