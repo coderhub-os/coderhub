@@ -10,7 +10,9 @@
 // release would be an unintended variable in every provider's fingerprint,
 // introduced without anyone deciding it should be there. Pin it.
 
-export const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; career-ops/1.0; +https://github.com/career-ops-hq/career-ops)';
+// coderhub:start ua (D3)
+export const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; coderhub/1.0)';
+// coderhub:end ua
 
 /**
  * Browser-like User-Agent for callers that must clear WAF/CDN bot management

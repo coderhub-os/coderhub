@@ -42,3 +42,5 @@ cops       text eol=lf
 # CoderHub: VERSION es nuestra (coderhub-vX.Y.Z); los syncs de upstream no la pisan.
 # Requiere `git config merge.ours.driver true` en el clon que mergea.
 VERSION merge=ours
+# README*.md son nuestros (README.md en español + stubs localizados); ver .github/DIVERGENCIAS.md.
+README*.md merge=ours

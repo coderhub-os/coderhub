@@ -582,7 +582,7 @@ async function checkPortalSlugs(root) {
 
 const PIPELINE_SKELETON = `# Pipeline — Pending URLs
 
-Paste job URLs below as \`- [ ] {url}\` then run \`/career-ops pipeline\`.
+Paste job URLs below as \`- [ ] {url}\` then run \`/coderhub pipeline\`.
 
 ## Pending
 
@@ -681,8 +681,8 @@ function checkProfileShape(root) {
 }
 
 async function main() {
-  console.log('\ncareer-ops doctor');
-  console.log('================\n');
+  console.log('\nCoderHub OS doctor'); // coderhub (D8)
+  console.log('==================\n');
 
   const { cli: activeCli, source: cliSource, warning: cliWarning } = resolveActiveCli();
 

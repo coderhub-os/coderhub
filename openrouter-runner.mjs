@@ -249,8 +249,8 @@ async function callOpenRouter(systemPrompt, userMessage) {
         headers: {
           'Authorization': `Bearer ${key}`,
           'Content-Type':  'application/json',
-          'HTTP-Referer':  'https://github.com/career-ops-hq/career-ops',
-          'X-Title':       'career-ops',
+          'HTTP-Referer':  'https://arielmirra.com/vsl', // coderhub (D15)
+          'X-Title':       'CoderHub OS', // coderhub (D15)
         },
         body,
         signal: ctrl.signal,
@@ -310,8 +310,8 @@ async function callOpenRouter(systemPrompt, userMessage) {
           headers: {
             'Authorization': `Bearer ${key}`,
             'Content-Type':  'application/json',
-            'HTTP-Referer':  'https://github.com/career-ops-hq/career-ops',
-            'X-Title':       'career-ops',
+            'HTTP-Referer':  'https://arielmirra.com/vsl', // coderhub (D15)
+            'X-Title':       'CoderHub OS', // coderhub (D15)
           },
           body,
           signal: controller.signal,

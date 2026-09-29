@@ -148,6 +148,7 @@ const SYSTEM_PATHS = [
   'modes/README.md',
   'modes/_shared.md',
   'modes/_writing.md',
+  'modes/_coderhub.md', // coderhub: capa de voz (A#)
   'modes/_profile.template.md',
   'modes/_custom.template.md',
   'modes/_brief.template.md',
@@ -3188,10 +3189,10 @@ async function apply() {
     console.log(`Updated ${updated.length} system paths.`);
     console.log(`Rollback available: node update-system.mjs rollback`);
 
-    console.log('\n-- The CareerOps Manifesto ------------------------------');
-    console.log('A new way of job searching is taking shape. You are');
-    console.log('already practicing it. Read it, sign it if you want to help:');
-    console.log('    npm run manifesto  ·  https://career-ops.org/manifesto?utm_source=updater');
+    // coderhub:start banner (D2)
+    console.log('\n-- CoderHub OS ---');
+    console.log('Novedades y tips de búsqueda laboral: https://www.instagram.com/ariel.mirra/');
+    // coderhub:end banner
 
   } finally {
     // Remove lock

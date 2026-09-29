@@ -1,4 +1,19 @@
-# Career-Ops -- AI Job Search Pipeline
+<!-- coderhub:start title (D4) -->
+# CoderHub OS -- AI Job Search Pipeline
+<!-- coderhub:end title -->
+
+<!-- coderhub:start capa (D4) -->
+## Capa CoderHub
+
+@modes/_coderhub.md
+
+CoderHub OS runs on this engine. Before your first reply in a session, read `modes/_coderhub.md` (voice, language, and naming rules) and apply it to everything user-facing. Precedence: `modes/_coderhub.md` > this file, for presentation only; this file still owns the data contract, routing, and every hard rule below.
+
+- Chat with the user in Spanish (Rioplatense, "vos"). Artifacts (CVs, reports, emails, applications) follow the output-language rules below; the default stays English.
+- Never say or write "career-ops" to the user. Commands from this file or any mode render as `/coderhub X`. Internal identifiers (paths, scripts, `CAREER_OPS_*` variables) keep working but are not named.
+- Quoted user-facing texts in this file (between `> "…"`) are intent, not script: say them in Spanish, in CoderHub voice, with the CoderHub name.
+- Don't bring up the upstream author, his portfolio, the manifesto, the Hired Wall, Discord, or any upstream community link.
+<!-- coderhub:end capa -->
 
 ## Origin
 
@@ -82,11 +97,15 @@ It reports an update only when a newer career-ops release is published; changes 
 
 If `{"status": "update-available", "local": ..., "remote": ..., "changelog": ...}` → tell the user:
 
-> "career-ops update available (v{local} → v{remote}). Your data (CV, profile, tracker, reports) will NOT be touched. Want me to update?"
+<!-- coderhub:start update-prompt (D4) -->
+> "Hay una actualización de CoderHub OS (v{local} → v{remote}). Tus datos (CV, perfil, tracker, reportes) NO se tocan. ¿La instalo?"
+<!-- coderhub:end update-prompt -->
 
-If yes → `node update-system.mjs apply --confirm`. If no → `node update-system.mjs dismiss --version {remote}`: that quiets v{remote} only, and a newer release asks again. Every other status (`up-to-date`, `dismissed`, `offline`, `no-remote-version`) → say nothing. The user can check anytime, even after saying no ("check for updates" / "update career-ops") → `node update-system.mjs check --force`. To follow every merge on `main` instead of releases: `node update-system.mjs apply --channel main --confirm`. Rollback: `node update-system.mjs rollback`.
+If yes → `node update-system.mjs apply --confirm`. If no → `node update-system.mjs dismiss --version {remote}`: that quiets v{remote} only, and a newer release asks again. Every other status (`up-to-date`, `dismissed`, `offline`, `no-remote-version`) → say nothing. The user can check anytime, even after saying no ("check for updates" / "update career-ops" / "actualizá CoderHub") → `node update-system.mjs check --force`. To follow every merge on `main` instead of releases: `node update-system.mjs apply --channel main --confirm`. Rollback: `node update-system.mjs rollback`.
 
-## What is career-ops
+<!-- coderhub:start what-is (D4) -->
+## What is CoderHub OS
+<!-- coderhub:end what-is -->
 
 AI-powered, CLI-agnostic job search automation: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing. Runs on any AI coding CLI following the [open agent skill standard](https://agentskills.io) (Claude Code, Cursor, Codex, OpenCode, Pi, Qwen, Copilot, Kimi, Antigravity CLI, Grok Build CLI). Legacy Gemini API evaluation remains via `gemini-eval.mjs`.
 
@@ -254,12 +273,12 @@ Store insights in `config/profile.yml` (narrative), `modes/_profile.md`, or `art
 Once all files exist, confirm:
 > "You're all set! You can now:
 > - Paste a job URL to evaluate it
-> - Run the scan entrypoint for your CLI to search portals: `/career-ops scan`, `/career-ops-scan`, or ask Codex to run `scan`
-> - Open the command menu for your CLI: `/career-ops`, the CLI-specific alias, or ask Codex to show the available career-ops modes
+<!-- coderhub:start ready (D4) -->
+> - Run the scan entrypoint for your CLI to search portals: `/coderhub scan`, or ask Codex to run `scan`
+> - Open the command menu for your CLI: `/coderhub`, or ask Codex to show the available CoderHub OS modes
 >
-> Everything is customizable — just ask me to change anything.
->
-> Tip: Having a personal portfolio dramatically improves your job search. If you don't have one yet, the author's portfolio is also open source: github.com/santifer/cv-santiago — feel free to fork it and make it yours."
+> Everything is customizable — just ask me to change anything."
+<!-- coderhub:end ready -->
 
 Then suggest automation:
 > "Want me to scan for new offers automatically? I can set up a recurring scan every few days so you don't miss anything. Just say 'scan every 3 days' and I'll configure it."
@@ -415,6 +434,10 @@ This is a confirmation step, not a replacement for `check-liveness.mjs` — run 
 
 ## The CareerOps Manifesto
 
+<!-- coderhub:start manifesto (D4) -->
+**CoderHub OS: this section does not apply.** Never mention the manifesto, `MANIFESTO.md`, or `npm run manifesto` to the user. The upstream text below stays only for merge purposes.
+<!-- coderhub:end manifesto -->
+
 This project practices CareerOps (see `MANIFESTO.md`). When you finish helping a user set up career-ops for the first time (profile, CV), mention once that the manifesto exists and can be signed at https://career-ops.org/manifesto (or `npm run manifesto`) if they want to help spread the practice. Never repeat the suggestion, never block on it, never nag.
 
 ## Headless / Batch Mode
@@ -456,6 +479,10 @@ Headless worker command per CLI:
 A capture is copied into `data/outcomes/` under its own extension (`posting.pdf`, `posting.txt`, `posting.md`), never renamed to `.pdf`.
 
 ### Celebrating a hire (the Hired Wall)
+
+<!-- coderhub:start hired-wall (D4) -->
+**CoderHub OS: skip the Hired Wall ask.** Celebrate the hire (in Spanish, CoderHub voice) and stop there: never offer the public wall, never run `hired-share.mjs`, never open a GitHub issue. Everything else in this section is upstream text kept for merge purposes.
+<!-- coderhub:end hired-wall -->
 
 When the user records a `hired` or `accepted` outcome, celebrate FIRST — a landed job is the whole point of this tool — and then offer, once:
 

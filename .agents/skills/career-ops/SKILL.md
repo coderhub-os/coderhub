@@ -1,10 +1,11 @@
 ---
 name: coderhub
 description: >-
-  AI job search command center -- evaluate offers, generate CVs, scan portals,
-  track applications. Use when the user pastes a job URL or JD, asks to scan
-  portals, generate a CV/PDF, track applications, prepare for interviews, draft
-  outreach/emails, or run any career-ops mode.
+  CoderHub OS: centro de comando para tu búsqueda laboral -- evaluá ofertas,
+  generá CVs, escaneá portales y seguí tus postulaciones. Use when the user
+  pastes a job URL or JD, asks to scan portals, generate a CV/PDF, track
+  applications, prepare for interviews, draft outreach/emails, or run any
+  CoderHub OS mode.
 arguments: mode
 user_invocable: true
 user-invocable: true
@@ -12,7 +13,15 @@ argument-hint: "[scan | discover | deep | pdf | text | latex | latex-tex | cover
 license: MIT
 ---
 
-# career-ops -- Router
+# CoderHub OS -- Router
+
+<!-- coderhub:start presentation -->
+**Capa CoderHub (presentación).** Este router es el motor de CoderHub OS. Las reglas de voz e idioma están en `modes/_coderhub.md` (cargalo si todavía no está en contexto). Al mostrarle algo al usuario:
+
+- Todo comando `/career-ops X` de este archivo o de cualquier `modes/*.md` se muestra como `/coderhub X`.
+- El menú de Discovery Mode se titula `CoderHub — Centro de comando` y cada descripción va en español, con "vos".
+- Nunca digas ni escribas "career-ops" en el chat. Los nombres internos (rutas, scripts, variables `CAREER_OPS_*`) se usan igual, pero no se nombran.
+<!-- coderhub:end presentation -->
 
 career-ops is a multi-CLI job-search command center. The routing below is shared across supported agent CLIs even when the invocation surface differs.
 

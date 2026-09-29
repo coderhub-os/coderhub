@@ -1,5 +1,5 @@
 {
-  "name": "career-ops",
+  "name": "coderhub",
   "version": "1.34.0",
   "description": "Open-source AI job search that runs locally in your AI coding CLI: scan job portals, evaluate listings into a structured A-H report with a 1-5 score, tailor your CV, track applications",
   "private": true,
@@ -89,10 +89,10 @@
     "ai-agent-skill"
   ],
   "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",
-  "homepage": "https://career-ops.org",
+  "homepage": "https://arielmirra.com/vsl",
   "repository": {
     "type": "git",
-    "url": "https://github.com/career-ops-hq/career-ops"
+    "url": "https://github.com/coderhub-os/coderhub"
   },
   "license": "MIT",
   "dependencies": {

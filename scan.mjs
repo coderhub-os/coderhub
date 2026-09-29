@@ -4044,7 +4044,8 @@ async function main() {
   // One-time-ever manifesto note: first successful REAL run only. The state
   // file keeps it from ever repeating; --dry-run must leave no trace, and a
   // piped/quiet run is not the moment for it.
-  if (!dryRun && process.stdout.isTTY && !process.argv.includes('--quiet') && !existsSync('.manifesto-noted')) {
+  // coderhub (D14): upstream's one-time manifesto note is off; `false &&` keeps the block for clean merges.
+  if (false && !dryRun && process.stdout.isTTY && !process.argv.includes('--quiet') && !existsSync('.manifesto-noted')) {
     // OSC 8 hyperlink where support is known, so the click attributes as
     // utm_source=cli while the visible text stays clean; otherwise print the
     // URL with the utm so typed visits attribute too.
