@@ -33,6 +33,9 @@ const CANONICAL = 'https://github.com/career-ops-hq/career-ops.git';
 // fetches the old address; both must resolve to the local mirror or an
 // upgrade-from-old-tag scenario silently reaches the real network.
 const CANONICAL_LEGACY = 'https://github.com/santifer/career-ops.git';
+// coderhub (D17): once the old updater self-updates, the target updater
+// fetches coderhub-os/coderhub; it must hit the mirror too.
+const CANONICAL_CODERHUB = 'https://github.com/coderhub-os/coderhub.git';
 const TAG_RE = /^career-ops-v(\d+)\.(\d+)\.(\d+)$/;
 
 function git(cwd, ...args) {
@@ -66,7 +69,7 @@ function buildMirror(work, targetSha) {
 function writeGitConfig(work, mirror) {
   const cfg = join(work, 'gitconfig');
   const url = pathToFileURL(mirror).href;
-  writeFileSync(cfg, `[user]\n\tname = upgrade-tests\n\temail = upgrade-tests@career-ops.test\n[url "${url}"]\n\tinsteadOf = ${CANONICAL}\n\tinsteadOf = ${CANONICAL_LEGACY}\n[safe]\n\tdirectory = *\n`);
+  writeFileSync(cfg, `[user]\n\tname = upgrade-tests\n\temail = upgrade-tests@career-ops.test\n[url "${url}"]\n\tinsteadOf = ${CANONICAL}\n\tinsteadOf = ${CANONICAL_LEGACY}\n\tinsteadOf = ${CANONICAL_CODERHUB}\n[safe]\n\tdirectory = *\n`);
   return cfg;
 }
 
