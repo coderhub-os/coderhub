@@ -62,3 +62,15 @@ El job `coderhub-sync.yml` (A4) hace los pasos 1 a 4 cada viernes y deja un PR. 
 3. Conflictos: resolvelos con esta tabla. `VERSION` y `README*.md` se resuelven solos.
 4. `node test-all.mjs --quick`. Los guards tienen que pasar.
 5. Revisá si hay workflows nuevos (X2) o idiomas nuevos de README (D10).
+
+## Release
+
+El updater de los clientes lee `VERSION` de `main` (`RAW_VERSION_URL`) y el tag del último release (`RELEASES_API`, `/releases/latest`). Los dos tienen que coincidir.
+
+1. **Versión.** En `next`, poné la nueva en `VERSION` (`X.Y.Z`, sin prefijo) y commiteá `chore(release): coderhub vX.Y.Z`. `package.json#version` queda como upstream (D1b).
+2. **CI.** Abrí un PR `next` → `main`. Tiene que pasar `Tests` entero, incluido el `upgrade-gate`.
+3. **Merge sin squash.** Con `Tests` en verde, `git push origin next:main` (fast-forward). Nunca squash ni rebase: se pierde el ancestro común con upstream y el próximo sync choca en todo el repo. GitHub marca el PR como mergeado solo.
+4. **Tag y release.** `gh release create coderhub-vX.Y.Z --repo coderhub-os/coderhub --target main --title "CoderHub OS vX.Y.Z" --notes-file <notas>`. Sin `--prerelease`: tiene que quedar como Latest.
+5. **Changelog.** Va en las notas del release, en español, y arranca con la versión del motor: `Motor: career-ops vA.B.C` (sale de `git show $(git merge-base next upstream/main):VERSION`). Después, qué cambia para el cliente. `CHANGELOG.md` queda como upstream.
+6. **Workflows.** `gh workflow list --repo coderhub-os/coderhub --all`. Todo lo que quedó `active` salvo `Tests`, `CoderHub upstream sync` y `Dependabot Updates` se apaga con `gh workflow disable` (X2). Los workflows nuevos aparecen recién cuando llegan a `main`.
+7. **Verificación.** En el piloto, `/coderhub update` tiene que ofrecer la versión nueva y el apply tiene que terminar con el banner de CoderHub (D2).
