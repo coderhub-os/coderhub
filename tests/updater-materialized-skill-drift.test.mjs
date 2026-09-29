@@ -3,7 +3,7 @@
  * must not report permanent system-files-changed drift over its materialized
  * CLI skill entrypoints (#3149, second cause).
  *
- * The regression: upstream ships `.claude/skills/career-ops/SKILL.md` and its
+ * The regression: upstream ships `.claude/skills/coderhub/SKILL.md` and its
  * siblings (SKILL_ENTRYPOINTS) as symlinks (git mode 120000) pointing at
  * `.agents/skills/career-ops/SKILL.md`. On a filesystem without symlink
  * support — mostly Windows with core.symlinks=false — apply() cannot check
@@ -51,7 +51,7 @@ import { pass, fail, rmSync, run, ROOT } from './helpers.mjs';
 import { gitIn, systemTreeDiffers, driftPathspecExcludingSkillEntrypoints } from '../update-system.mjs';
 
 const SYSTEM_PATHS = ['scan.mjs', '.agents/', '.claude/skills/', 'scaffolder/'];
-const ENTRYPOINT_PATH = '.claude/skills/career-ops/SKILL.md';
+const ENTRYPOINT_PATH = '.claude/skills/coderhub/SKILL.md';
 const SKILL_ENTRYPOINTS = [{ path: ENTRYPOINT_PATH }];
 const POINTER_TEXT = '../../../.agents/skills/career-ops/SKILL.md';
 

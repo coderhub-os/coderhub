@@ -6,15 +6,17 @@ import { fail, pass, rmSync, ROOT, run } from './helpers.mjs';
 console.log('\nSkill project-root resolution (#3332)');
 
 const entrypoints = [
-  '.agents',
-  '.antigravitycli',
-  '.claude',
-  '.cursor',
-  '.grok',
-  '.kimi',
-  '.opencode',
-  '.qwen',
-].map(dir => join(dir, 'skills', 'career-ops', 'SKILL.md'));
+  join('.agents', 'skills', 'career-ops', 'SKILL.md'),
+  ...[
+    '.antigravitycli',
+    '.claude',
+    '.cursor',
+    '.grok',
+    '.kimi',
+    '.opencode',
+    '.qwen',
+  ].map(dir => join(dir, 'skills', 'coderhub', 'SKILL.md')),
+];
 
 function findProjectRoot(skillPath) {
   let current = dirname(skillPath);
@@ -102,9 +104,9 @@ if (failures.length === 0) {
 
 const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-materialized-symlink-'));
 const fixtureTarget = join(fixtureRoot, '.agents', 'skills', 'career-ops', 'SKILL.md');
-const fixturePointer = join(fixtureRoot, '.claude', 'skills', 'career-ops', 'SKILL.md');
+const fixturePointer = join(fixtureRoot, '.claude', 'skills', 'coderhub', 'SKILL.md');
 const fixtureTargetRelative = '.agents/skills/career-ops/SKILL.md';
-const fixturePointerRelative = '.claude/skills/career-ops/SKILL.md';
+const fixturePointerRelative = '.claude/skills/coderhub/SKILL.md';
 const pointerTarget = '../../../.agents/skills/career-ops/SKILL.md';
 
 try {

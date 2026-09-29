@@ -1249,7 +1249,7 @@ export function systemTreeDiffers(systemPaths, upstreamRef = 'FETCH_HEAD', ctx =
  * Pathspecs for systemTreeDiffers()'s drift diff, with the CLI skill
  * entrypoints excluded (#3149, second cause).
  *
- * Upstream ships those entrypoints (`.claude/skills/career-ops/SKILL.md` and
+ * Upstream ships those entrypoints (`.claude/skills/coderhub/SKILL.md` and
  * its siblings) as symlinks (git mode 120000) pointing at
  * `.agents/skills/career-ops/SKILL.md`. On a filesystem without symlink
  * support (core.symlinks=false — mostly Windows), apply() materializes a

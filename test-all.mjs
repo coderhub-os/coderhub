@@ -1787,13 +1787,13 @@ const systemFiles = [
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
   'modes/heuristics/recruiter-side.md',
   'templates/states.yml', 'templates/cv-template.html',
-  '.claude/skills/career-ops/SKILL.md',
-  '.cursor/skills/career-ops/SKILL.md',
-  '.opencode/skills/career-ops/SKILL.md',
-  '.qwen/skills/career-ops/SKILL.md',
-  '.antigravitycli/skills/career-ops/SKILL.md',
-  '.grok/skills/career-ops/SKILL.md',
-  '.kimi/skills/career-ops/SKILL.md',
+  '.claude/skills/coderhub/SKILL.md',
+  '.cursor/skills/coderhub/SKILL.md',
+  '.opencode/skills/coderhub/SKILL.md',
+  '.qwen/skills/coderhub/SKILL.md',
+  '.antigravitycli/skills/coderhub/SKILL.md',
+  '.grok/skills/coderhub/SKILL.md',
+  '.kimi/skills/coderhub/SKILL.md',
 ];
 
 for (const f of systemFiles) {
@@ -1837,7 +1837,7 @@ if (!canonicalEntry) {
   fail(`Could not read git index entry for the canonical entrypoint ${CANONICAL_ENTRYPOINT}`);
 }
 
-const skillEntrypoints = systemFiles.filter((f) => f.endsWith('/skills/career-ops/SKILL.md'));
+const skillEntrypoints = systemFiles.filter((f) => f.endsWith('/skills/coderhub/SKILL.md'));
 for (const f of skillEntrypoints) {
   const staged = stagedBlob(f);
   if (!staged) {
@@ -3062,7 +3062,7 @@ if (
   fail('_custom.md read-path regressed: missing Sources of Truth row, honor rule in _shared.md, or the pre-generation read in pdf.md (#1388 would reopen)');
 }
 
-for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+for (const skillPath of ['.claude/skills/coderhub/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
   if (!fileExists(skillPath)) {
     fail(`${skillPath} is missing`);
     continue;
@@ -3108,7 +3108,7 @@ if (
   fail('email mode missing required application-email behavior');
 }
 
-for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+for (const skillPath of ['.claude/skills/coderhub/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
   if (!fileExists(skillPath)) {
     fail(`${skillPath} is missing`);
     continue;
@@ -6528,7 +6528,7 @@ for (const [name, marker] of criticalRoutingContracts) {
   if (marker.test(agents)) pass(`AGENTS.md preserves ${name} routing for Claude`);
   else fail(`AGENTS.md is missing ${name} routing required by the Claude wrapper`);
 }
-const claudeSkillEntrypoint = readFile('.claude/skills/career-ops/SKILL.md');
+const claudeSkillEntrypoint = readFile('.claude/skills/coderhub/SKILL.md');
 if (/\.agents\/skills\/career-ops\/SKILL\.md/.test(claudeSkillEntrypoint) || claudeSkillEntrypoint === readFile('.agents/skills/career-ops/SKILL.md')) {
   pass('Claude skill invocation resolves to the canonical career-ops router');
 } else {
@@ -6541,12 +6541,12 @@ console.log('\n12. Skill symlink integrity');
 
 const canonicalSkill = '.agents/skills/career-ops/SKILL.md';
 const symlinks = [
-  '.claude/skills/career-ops/SKILL.md',
-  '.cursor/skills/career-ops/SKILL.md',
-  '.opencode/skills/career-ops/SKILL.md',
-  '.qwen/skills/career-ops/SKILL.md',
-  '.antigravitycli/skills/career-ops/SKILL.md',
-  '.grok/skills/career-ops/SKILL.md',
+  '.claude/skills/coderhub/SKILL.md',
+  '.cursor/skills/coderhub/SKILL.md',
+  '.opencode/skills/coderhub/SKILL.md',
+  '.qwen/skills/coderhub/SKILL.md',
+  '.antigravitycli/skills/coderhub/SKILL.md',
+  '.grok/skills/coderhub/SKILL.md',
 ];
 
 let canonicalReal = null;
@@ -6640,8 +6640,8 @@ console.log('\n12a. Skill entrypoint materialization');
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-'));
   try {
     const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
-    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
-    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'coderhub');
+    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'coderhub');
     mkdirSync(canonicalDir, { recursive: true });
     mkdirSync(claudeDir, { recursive: true });
     mkdirSync(opencodeDir, { recursive: true });
@@ -6655,8 +6655,8 @@ console.log('\n12a. Skill entrypoint materialization');
     const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
     const materialized = skills.materializeSkillEntrypoints(fixtureRoot).sort();
     const expected = [
-      '.claude/skills/career-ops/SKILL.md',
-      '.opencode/skills/career-ops/SKILL.md',
+      '.claude/skills/coderhub/SKILL.md',
+      '.opencode/skills/coderhub/SKILL.md',
     ];
 
     if (JSON.stringify(materialized) === JSON.stringify(expected)) {
@@ -6694,7 +6694,7 @@ console.log('\n12a-bis. Every tracked skill entrypoint is materializable');
   try {
     const tracked = execSync('git ls-files', { cwd: ROOT, encoding: 'utf-8' })
       .split('\n')
-      .filter((p) => /^\.[^/]+\/skills\/career-ops\/SKILL\.md$/.test(p))
+      .filter((p) => /^\.[^/]+\/skills\/coderhub\/SKILL\.md$/.test(p))
       .filter((p) => !p.startsWith('.agents/')) // the canonical target, not an entrypoint
       .sort();
 
@@ -6724,7 +6724,7 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-ensure-skills-'));
   try {
     const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
-    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'coderhub');
     mkdirSync(canonicalDir, { recursive: true });
     mkdirSync(claudeDir, { recursive: true });
 
@@ -6749,7 +6749,7 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
       fail(`unexpected bootstrapped skill entrypoints: ${JSON.stringify(touched)}`);
     }
 
-    const grokSkill = readFileSync(join(fixtureRoot, '.grok', 'skills', 'career-ops', 'SKILL.md'), 'utf-8');
+    const grokSkill = readFileSync(join(fixtureRoot, '.grok', 'skills', 'coderhub', 'SKILL.md'), 'utf-8');
     const claudeSkill = readFileSync(join(claudeDir, 'SKILL.md'), 'utf-8');
     if (grokSkill === fixtureSkill && claudeSkill === fixtureSkill) {
       pass('ensureSkillEntrypoints materializes canonical skill content');
@@ -6835,7 +6835,7 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-unreadable-'));
   try {
     const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
-    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'coderhub');
     mkdirSync(canonicalDir, { recursive: true });
     mkdirSync(claudeDir, { recursive: true });
 
@@ -6862,8 +6862,8 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'career-ops-skills-entry-dir-'));
   try {
     const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
-    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
-    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'coderhub');
+    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'coderhub');
     mkdirSync(canonicalDir, { recursive: true });
     mkdirSync(claudeDir, { recursive: true });
     mkdirSync(opencodeDir, { recursive: true });
@@ -6877,7 +6877,7 @@ console.log('\n12b. Skill entrypoint bootstrap (npx / old releases)');
     const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
     const materialized = skills.materializeSkillEntrypoints(fixtureRoot);
     const opencodeSkill = readFileSync(join(opencodeDir, 'SKILL.md'), 'utf-8');
-    if (JSON.stringify(materialized) === JSON.stringify(['.opencode/skills/career-ops/SKILL.md']) && opencodeSkill === fixtureSkill) {
+    if (JSON.stringify(materialized) === JSON.stringify(['.opencode/skills/coderhub/SKILL.md']) && opencodeSkill === fixtureSkill) {
       pass('update-system skips non-file skill entrypoints while materializing valid pointers');
     } else {
       fail(`non-file skill entrypoint handling was unexpected: ${JSON.stringify(materialized)}`);
@@ -6934,8 +6934,8 @@ console.log('\n12c. Materialized skill index mode');
 
   try {
     const canonicalDir = join(fixtureRoot, '.agents', 'skills', 'career-ops');
-    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'career-ops');
-    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'career-ops');
+    const claudeDir = join(fixtureRoot, '.claude', 'skills', 'coderhub');
+    const opencodeDir = join(fixtureRoot, '.opencode', 'skills', 'coderhub');
     mkdirSync(canonicalDir, { recursive: true });
     mkdirSync(claudeDir, { recursive: true });
     mkdirSync(opencodeDir, { recursive: true });
@@ -6995,8 +6995,8 @@ console.log('\n12c. Materialized skill index mode');
     }
 
     const pointerBlob = gitRun(['hash-object', '-w', '--stdin'], { input: pointer });
-    gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.claude/skills/career-ops/SKILL.md`]);
-    gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.opencode/skills/career-ops/SKILL.md`]);
+    gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.claude/skills/coderhub/SKILL.md`]);
+    gitRun(['update-index', '--add', '--cacheinfo', `120000,${pointerBlob},.opencode/skills/coderhub/SKILL.md`]);
 
     const updater = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
     const skills = await import(pathToFileURL(join(ROOT, 'scaffolder/bin/skill-entrypoints.mjs')).href);
@@ -7004,16 +7004,16 @@ console.log('\n12c. Materialized skill index mode');
     updater.prepareMaterializedSkillEntrypointsForStage(materialized, fixtureRoot);
     gitRun(['add', '--', '.claude/skills/', '.opencode/skills/']);
 
-    const claudeIndex = gitRun(['ls-files', '-s', '--', '.claude/skills/career-ops/SKILL.md']);
-    const opencodeIndex = gitRun(['ls-files', '-s', '--', '.opencode/skills/career-ops/SKILL.md']);
+    const claudeIndex = gitRun(['ls-files', '-s', '--', '.claude/skills/coderhub/SKILL.md']);
+    const opencodeIndex = gitRun(['ls-files', '-s', '--', '.opencode/skills/coderhub/SKILL.md']);
     if (claudeIndex.startsWith('100644 ') && opencodeIndex.startsWith('100644 ')) {
       pass('materialized skill entrypoints stage as regular files, not symlink blobs');
     } else {
       fail(`materialized skill entrypoints staged with wrong modes: ${JSON.stringify([claudeIndex, opencodeIndex])}`);
     }
 
-    const claudeBlob = gitRaw(['show', ':.claude/skills/career-ops/SKILL.md']);
-    const opencodeBlob = gitRaw(['show', ':.opencode/skills/career-ops/SKILL.md']);
+    const claudeBlob = gitRaw(['show', ':.claude/skills/coderhub/SKILL.md']);
+    const opencodeBlob = gitRaw(['show', ':.opencode/skills/coderhub/SKILL.md']);
     if (claudeBlob === fixtureSkill && opencodeBlob === fixtureSkill) {
       pass('materialized skill blobs contain canonical skill content');
     } else {
@@ -17383,7 +17383,7 @@ try {
   fail(`modes/titles.md missing or unreadable: ${e.message}`);
 }
 
-for (const skillPath of ['.claude/skills/career-ops/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
+for (const skillPath of ['.claude/skills/coderhub/SKILL.md', '.agents/skills/career-ops/SKILL.md']) {
   if (!fileExists(skillPath)) continue; // existence already checked in section 8
   const skill = readFile(skillPath);
   if (
