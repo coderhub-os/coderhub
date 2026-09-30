@@ -43,13 +43,14 @@ for (const name of readdirSync(ROOT).filter((f) => /^README[\w.-]*\.md$/.test(f)
   visible[name] = read(name);
 }
 visible['update-system.mjs (banner)'] = block(updater, 'banner');
-for (const b of ['msg-toplevel', 'msg-release-api', 'msg-release-tag']) {
+for (const b of ['msg-toplevel', 'msg-release-api', 'msg-release-tag', 'msg-rate-limit']) {
   visible[`update-system.mjs (${b})`] = block(updater, b);
 }
+visible['modes/update.md (rate-limited)'] = block(read('modes/update.md'), 'rate-limited');
 visible['update-system.mjs (.gitignore header)'] = (updater.match(/^  '# Added by .*$/m) || [null])[0];
 visible['doctor.mjs (header)'] = (read('doctor.mjs').match(/console\.log\('\\n[^']*doctor'\)/) || [null])[0];
 const agents = read('AGENTS.md');
-for (const b of ['title', 'update-prompt', 'what-is', 'ready', 'manifesto', 'hired-wall']) {
+for (const b of ['title', 'update-prompt', 'rate-limited', 'what-is', 'ready', 'manifesto', 'hired-wall']) {
   visible[`AGENTS.md (${b})`] = block(agents, b);
 }
 // The `capa` and router `presentation` blocks name "career-ops" on purpose:

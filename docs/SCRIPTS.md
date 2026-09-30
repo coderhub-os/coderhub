@@ -567,6 +567,7 @@ Possible JSON responses:
 | `update-available` | Newer version exists (includes `local`, `remote`, `changelog`) |
 | `dismissed` | User said no to this release (`update-system.mjs dismiss --version X.Y.Z`); a newer release reports again |
 | `offline` | Could not reach GitHub |
+| `rate-limited` | GitHub's API quota for this network is spent (includes `resetAt`, ISO time). With `gh` logged in, the updater sends its token and gets 5,000 requests per hour |
 | `no-remote-version` | GitHub answered without a usable `career-ops-vX.Y.Z` release |
 
 `check --force` ignores a dismissal. `check --channel main` keeps the previous behaviour for installs that follow `main`: main's `VERSION` plus system-file drift (`reason: system-files-changed`).

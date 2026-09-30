@@ -10,7 +10,7 @@ Tipos: **D** = parche sobre un archivo de upstream · **A** = archivo nuevo (ups
 
 Los parches en código van entre marcadores `coderhub:start <nombre>` / `coderhub:end <nombre>`, o con un comentario `// coderhub (Dn)` en la línea. Buscá `coderhub` en el diff del conflicto.
 
-`tests/coderhub-guards.test.mjs` falla si un sync revierte D1, D3 o D7, si se pierde el import de la capa (D4), si vuelve "career-ops" a una superficie visible o si `modes/_coderhub.md` sale de SYSTEM_PATHS.
+`tests/coderhub-guards.test.mjs` falla si un sync revierte D1, D3 o D7, si se pierde el import de la capa (D4), si falta el aviso de `rate-limited` (D19), si vuelve "career-ops" a una superficie visible o si `modes/_coderhub.md` sale de SYSTEM_PATHS.
 
 ## Divergencias
 
@@ -41,6 +41,7 @@ Los parches en código van entre marcadores `coderhub:start <nombre>` / `coderhu
 | D16 | `.github/workflows/test.yml` | D | `pull_request.branches: [main, next]`. El job `upgrade-gate` baja los tags `career-ops-v*` de upstream antes del harness (bloque `upstream-tags`). El repo del motor no tiene esos tags, para que "career-ops" no aparezca en Tags ni Releases, y los tags viven solo en el runner (opción A). | Re-aplicá la rama y el bloque. |
 | D17 | `upgrade-tests.mjs` (`CANONICAL_CODERHUB`, `writeGitConfig`) | D | El harness redirige al mirror local también `coderhub-os/coderhub`. Sin esto, cuando el updater viejo se autoactualiza, el nuevo (D1) baja del repo real y el gate prueba contra el `main` publicado en vez del commit del PR. | Re-agregá la constante y su línea `insteadOf`. |
 | D18 | `update-system.mjs` (bloques `msg-toplevel`, `msg-release-api`, `msg-release-tag`, línea del header de `.gitignore`) | D | Los errores del updater dicen "CoderHub OS" en vez de "career-ops". `msg-release-api` además avisa que la causa puede ser el límite de 60 requests por hora sin autenticar de la API de GitHub (red compartida o VPN), no solo falta de conexión. `msg-release-tag` no menciona el componente `web` de upstream, que acá no existe. El header del bloque que el updater agrega al `.gitignore` del cliente dice "CoderHub OS". El User-Agent `career-ops-update-checker` queda como upstream (interno). El guard lo verifica. | Aceptá upstream fuera de los bloques y re-aplicá los 3 bloques y la línea `// coderhub (D18)`. |
+| D19 | `update-system.mjs` (bloques `gh-token`, `gh-token-auth`, `gh-token-auth-stdin`, `rate-limited-status`, `rate-limited-reset`, `msg-rate-limit`), `AGENTS.md` y `modes/update.md` (bloque `rate-limited`), fila `rate-limited` en `docs/SCRIPTS.md` | D | Si `gh` está logueado, `curlGet` manda su token a `api.github.com` (y solo ahí), por stdin con `--header @-` para que no quede en la lista de procesos: 5.000 requests por hora por usuario en vez de 60 por IP. Si el lookup del release falla, pregunta a `/rate_limit` (no gasta cuota): con `remaining: 0`, `check` devuelve `rate-limited` con `resetAt` en vez de `offline`, y `apply` tira un error con la hora de reset y `gh auth login`. El agente avisa `rate-limited` una vez por sesión (`offline` sigue en silencio). `tests/coderhub-updater-rate-limit.test.mjs` lo cubre y el guard verifica los bloques visibles. | Aceptá upstream fuera de los bloques y re-aplicalos. Si upstream agrega auth propia, quedate con la de upstream y sacá `gh-token`. |
 | X1 | `test-all.mjs` (bloque `sponsors-check`, check #76) | X | El chequeo de `.github/scripts/sponsors.mjs --check` queda apagado (`const r = { status: 0 }`): el README en español no tiene la sección Sponsors de upstream. | Re-poné el bloque. Si upstream mueve el check, buscá `sponsors.mjs', '--check'`. |
 | X2 | Workflows de GitHub Actions | X | 24 workflows apagados en el repo (upstream tiene más de los 23 del plan). Solo `Tests` y `CoderHub upstream sync` (A4) quedan activos. Dependabot sigue activo. | Después de cada sync que agregue un workflow, apagalo: `gh workflow disable <nombre> --repo coderhub-os/coderhub`. Está en el checklist de release. |
 | ~~D13~~ | `.gitignore` | — | **Revertida.** Igual que upstream: los datos del cliente no se versionan. | — |
@@ -53,7 +54,7 @@ Los parches en código van entre marcadores `coderhub:start <nombre>` / `coderhu
 - **`scaffolder/bin/cli.mjs`:** la URL de Docs apunta a upstream. El scaffolder `npx` no es parte del flujo de CoderHub.
 - **Docs internos e issue templates** siguen enlazando `career-ops-hq`: `docs/CODEX.md` (17 menciones), `LEGAL_DISCLAIMER.md` (5), `.github/ISSUE_TEMPLATE/`. El README no los enlaza.
 - **`package-lock.json`** (untracked en la raíz) conserva el nombre de upstream.
-- **Rate limit:** `RELEASES_API` usa la API de GitHub sin auth (60 pedidos/hora por IP). Si un cliente chequea updates muchas veces seguidas, puede fallar hasta que se resetee.
+- **Rate limit sin `gh`:** un cliente sin `gh` logueado sigue con 60 pedidos por hora por IP. En una red compartida puede quedarse sin cuota; desde D19 se entera (`rate-limited`) en vez de no saber nada. `--channel main` (`checkMainChannel`) no distingue el rate limit: sigue diciendo `offline`.
 
 ## Sync con upstream
 

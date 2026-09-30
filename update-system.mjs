@@ -1981,10 +1981,13 @@ function rebuildDashboardBinaryIfNeeded() {
 // not respect but curl handles transparently.  The --silent / --fail flags
 // match the failure-handling already used throughout apply().
 function curlGet(url, extraArgs = []) {
+  // coderhub:start gh-token-auth (D19)
+  const auth = curlAuthPlan(url, githubToken());
+  // coderhub:end gh-token-auth
   return new Promise((resolve) => {
-    execFile(
+    const child = execFile(
       'curl',
-      ['--silent', '--fail', '--max-time', '10', ...extraArgs, url],
+      ['--silent', '--fail', '--max-time', '10', ...auth.args, ...extraArgs, url],
       { encoding: 'utf-8', timeout: 12000 },
       (error, stdout) => {
         if (error) {
@@ -1994,8 +1997,72 @@ function curlGet(url, extraArgs = []) {
         }
       }
     );
+    // coderhub:start gh-token-auth-stdin (D19)
+    child.stdin?.end(auth.stdin ?? '');
+    // coderhub:end gh-token-auth-stdin
   });
 }
+
+// coderhub:start gh-token (D19)
+// GitHub allows 60 unauthenticated API requests per hour per IP. On a shared
+// network (corporate VPN, office NAT) other people spend that quota, and the
+// releases lookup fails for everyone behind it. With the user's gh token the
+// quota is theirs: 5,000 per hour. The token goes to api.github.com only, and
+// through stdin (`--header @-`) so it never shows up in the process list.
+/**
+ * @param {string} url
+ * @param {string} token
+ * @returns {{args: string[], stdin: string|null}}
+ */
+export function curlAuthPlan(url, token) {
+  let host = '';
+  try { host = new URL(url).host; } catch { /* not a URL: no auth */ }
+  if (!token || host !== 'api.github.com') return { args: [], stdin: null };
+  return { args: ['--header', '@-'], stdin: `Authorization: Bearer ${token}\n` };
+}
+
+/**
+ * The token `gh auth token` prints, or '' when gh is missing, logged out or
+ * prints anything that is not a single token.
+ * @param {() => string} [runGh] - test seam.
+ */
+export function readGhToken(runGh = () => execFileSync('gh', ['auth', 'token'], {
+  encoding: 'utf-8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'],
+})) {
+  try {
+    const token = String(runGh() || '').trim();
+    return /^\S+$/.test(token) ? token : '';
+  } catch {
+    return '';
+  }
+}
+
+let cachedGithubToken;
+function githubToken() {
+  if (cachedGithubToken === undefined) cachedGithubToken = readGhToken();
+  return cachedGithubToken;
+}
+
+const RATE_LIMIT_API = 'https://api.github.com/rate_limit';
+
+/**
+ * After an API lookup failed: when GitHub says the quota is spent, the ISO
+ * time it resets; '' otherwise (quota left, or /rate_limit unreachable too).
+ * /rate_limit itself does not count against the quota.
+ * @param {typeof curlGet} runCurlGet
+ */
+async function rateLimitResetAt(runCurlGet) {
+  const raw = await runCurlGet(RATE_LIMIT_API, [
+    '--header', 'Accept: application/vnd.github+json',
+    '--header', 'User-Agent: career-ops-update-checker',
+  ]);
+  if (raw === null) return '';
+  let rate = null;
+  try { rate = JSON.parse(raw)?.rate; } catch { return ''; }
+  if (!rate || rate.remaining !== 0 || !Number.isFinite(rate.reset)) return '';
+  return new Date(rate.reset * 1000).toISOString();
+}
+// coderhub:end gh-token
 
 // ── CHANNEL RESOLUTION ──────────────────────────────────────────
 
@@ -2106,6 +2173,16 @@ export async function resolveTargetRef(argv, env, ctx = {}) {
     '--header', 'User-Agent: career-ops-update-checker',
   ]);
   if (releaseRaw === null) {
+    // coderhub:start msg-rate-limit (D19)
+    const resetAt = await rateLimitResetAt(runCurlGet);
+    if (resetAt) {
+      throw new Error(
+        'GitHub\'s API rate limit for this network is used up, so the latest CoderHub OS release could not be resolved. ' +
+        `It resets at ${resetAt}. Nothing was changed. ` +
+        'Retry after that, or run `gh auth login` once so updates use your own GitHub quota (5,000 requests per hour) instead of the network\'s 60.',
+      );
+    }
+    // coderhub:end msg-rate-limit
     // coderhub:start msg-release-api (D18)
     throw new Error(
       `Could not reach ${RELEASES_API} to resolve the latest CoderHub OS release. ` +
@@ -2215,14 +2292,20 @@ function readDismissMarker() {
  *
  * @param {typeof curlGet} runCurlGet
  * @returns {Promise<{status: 'ok', tagName: string, version: string, publishedAt: string, changelog: string}
- *   | {status: 'offline'|'no-remote-version', tag?: string}>}
+ *   | {status: 'offline'|'no-remote-version', tag?: string}
+ *   | {status: 'rate-limited', resetAt: string}>}
  */
 async function latestRelease(runCurlGet) {
   const releaseRaw = await runCurlGet(RELEASES_API, [
     '--header', 'Accept: application/vnd.github.v3+json',
     '--header', 'User-Agent: career-ops-update-checker',
   ]);
-  if (releaseRaw === null) return { status: 'offline' };
+  if (releaseRaw === null) {
+    // coderhub:start rate-limited-status (D19)
+    const resetAt = await rateLimitResetAt(runCurlGet);
+    return resetAt ? { status: 'rate-limited', resetAt } : { status: 'offline' };
+    // coderhub:end rate-limited-status
+  }
   let release = null;
   try { release = JSON.parse(releaseRaw); } catch { /* unparseable body */ }
   const tagName = String(release?.tag_name || '').trim();
@@ -2260,7 +2343,9 @@ export async function checkStatus(argv, env, ctx = {}) {
   if (resolveChannel(argv, env) === 'main') return checkMainChannel(local, marker, runCurlGet);
 
   const latest = await latestRelease(runCurlGet);
-  if (latest.status !== 'ok') return { status: latest.status, local, ...(latest.tag ? { tag: latest.tag } : {}) };
+  // coderhub:start rate-limited-reset (D19)
+  if (latest.status !== 'ok') return { status: latest.status, local, ...(latest.tag ? { tag: latest.tag } : {}), ...(latest.resetAt ? { resetAt: latest.resetAt } : {}) };
+  // coderhub:end rate-limited-reset
   const remote = latest.version;
   if (compareVersions(local, remote) >= 0) return { status: 'up-to-date', local, remote };
   if (dismissalCovers(marker, remote, latest.publishedAt)) return { status: 'dismissed', local, remote };

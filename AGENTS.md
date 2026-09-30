@@ -103,6 +103,12 @@ If `{"status": "update-available", "local": ..., "remote": ..., "changelog": ...
 
 If yes → `node update-system.mjs apply --confirm`. If no → `node update-system.mjs dismiss --version {remote}`: that quiets v{remote} only, and a newer release asks again. Every other status (`up-to-date`, `dismissed`, `offline`, `no-remote-version`) → say nothing. The user can check anytime, even after saying no ("check for updates" / "update career-ops" / "actualizá CoderHub") → `node update-system.mjs check --force`. To follow every merge on `main` instead of releases: `node update-system.mjs apply --channel main --confirm`. Rollback: `node update-system.mjs rollback`.
 
+<!-- coderhub:start rate-limited (D19) -->
+Exception: `{"status": "rate-limited", "resetAt": ...}` means GitHub's API quota for the user's network is spent (60 requests per hour per IP without a token; shared VPNs and offices hit it), so a release could exist and go unseen. Tell the user once, then carry on:
+
+> "No pude chequear si hay actualizaciones de CoderHub OS: GitHub limita las consultas desde tu red. Se libera a las {resetAt en la hora local del usuario, HH:MM}. Si instalás `gh` y corrés `gh auth login` una vez, no te vuelve a pasar."
+<!-- coderhub:end rate-limited -->
+
 <!-- coderhub:start what-is (D4) -->
 ## What is CoderHub OS
 <!-- coderhub:end what-is -->

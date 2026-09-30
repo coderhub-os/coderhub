@@ -8,6 +8,9 @@ Run `node update-system.mjs check --force` and parse the JSON output. `--force` 
 
 - If `up-to-date`: Tell the user "CoderHub OS is up to date (v{version})." and stop.
 - If `offline`: Tell the user "Cannot reach GitHub to check for updates. Either there is no connection, or GitHub's limit of 60 update checks per hour for this network was hit (it resets within the hour). Try again later." and stop.
+<!-- coderhub:start rate-limited (D19) -->
+- If `rate-limited`: Tell the user "No pude chequear si hay actualizaciones: GitHub limita las consultas desde tu red. Se libera a las {resetAt en tu hora local, HH:MM}. Si instalás `gh` y corrés `gh auth login` una vez, las consultas usan tu cuenta y no te vuelve a pasar." and stop.
+<!-- coderhub:end rate-limited -->
 - If `no-remote-version`: Tell the user "Couldn't determine the latest CoderHub OS release right now. Try again later." and stop.
 - If `update-available`: Continue to Step 2.
 
