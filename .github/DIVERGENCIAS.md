@@ -73,6 +73,13 @@ El updater de los clientes lee `VERSION` de `main` (`RAW_VERSION_URL`) y el tag 
 2. **CI.** Abrí un PR `next` → `main`. Tiene que pasar `Tests` entero, incluido el `upgrade-gate`.
 3. **Merge sin squash.** Con `Tests` en verde, `git push origin next:main` (fast-forward). Nunca squash ni rebase: se pierde el ancestro común con upstream y el próximo sync choca en todo el repo. GitHub marca el PR como mergeado solo.
 4. **Tag y release.** `gh release create coderhub-vX.Y.Z --repo coderhub-os/coderhub --target main --title "CoderHub OS vX.Y.Z" --notes-file <notas>`. Sin `--prerelease`: tiene que quedar como Latest.
-5. **Changelog.** Va en las notas del release, en español, y arranca con la versión del motor: `Motor: career-ops vA.B.C` (sale de `git show $(git merge-base next upstream/main):VERSION`). Después, qué cambia para el cliente. `CHANGELOG.md` queda como upstream.
+5. **Changelog.** Va en las notas del release, en español, y dice solo qué cambia para el cliente. Sin "career-ops": `/coderhub update` le muestra las notas al cliente. La versión del motor (`git show $(git merge-base next upstream/main):VERSION`) se anota en la tabla de abajo, en el mismo commit de release. `CHANGELOG.md` queda como upstream.
 6. **Workflows.** `gh workflow list --repo coderhub-os/coderhub --all`. Todo lo que quedó `active` salvo `Tests`, `CoderHub upstream sync` y `Dependabot Updates` se apaga con `gh workflow disable` (X2). Los workflows nuevos aparecen recién cuando llegan a `main`.
 7. **Verificación.** En el piloto, `/coderhub update` tiene que ofrecer la versión nueva y el apply tiene que terminar con el banner de CoderHub (D2).
+
+## Motor por versión
+
+| CoderHub OS | career-ops |
+|---|---|
+| v1.0.0 | v1.34.0 |
+| v1.0.1 | v1.34.0 |
