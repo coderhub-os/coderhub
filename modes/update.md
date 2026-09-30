@@ -7,7 +7,7 @@ When the user runs `/coderhub update`, execute this interactive update flow.
 Run `node update-system.mjs check --force` and parse the JSON output. `--force` because the user asked: a release they said no to earlier is shown too.
 
 - If `up-to-date`: Tell the user "CoderHub OS is up to date (v{version})." and stop.
-- If `offline`: Tell the user "Cannot reach GitHub to check for updates. Try again later." and stop.
+- If `offline`: Tell the user "Cannot reach GitHub to check for updates. Either there is no connection, or GitHub's limit of 60 update checks per hour for this network was hit (it resets within the hour). Try again later." and stop.
 - If `no-remote-version`: Tell the user "Couldn't determine the latest CoderHub OS release right now. Try again later." and stop.
 - If `update-available`: Continue to Step 2.
 

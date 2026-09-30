@@ -891,9 +891,11 @@ export function gitToplevelMismatch(root = ROOT) {
 function assertOwnGitToplevel() {
   const foreignToplevel = gitToplevelMismatch();
   if (foreignToplevel) {
+    // coderhub:start msg-toplevel (D18)
     throw new Error(
-      `career-ops at ${ROOT} is not a git checkout of its own, so git operations would land in the enclosing repository at ${foreignToplevel} — this happens when the install was unpacked from a ZIP or copied without its .git directory. Nothing was changed. To make updates work, clone career-ops fresh (git clone ${CANONICAL_REPO}) and move your user-layer files (cv.md, config/, data/, reports/ — see DATA_CONTRACT.md) into the new clone.`,
+      `CoderHub OS at ${ROOT} is not a git checkout of its own, so git operations would land in the enclosing repository at ${foreignToplevel} — this happens when the install was unpacked from a ZIP or copied without its .git directory. Nothing was changed. To make updates work, clone CoderHub OS fresh (git clone ${CANONICAL_REPO}) and move your user-layer files (cv.md, config/, data/, reports/ — see DATA_CONTRACT.md) into the new clone.`,
     );
+    // coderhub:end msg-toplevel
   }
 }
 
@@ -2104,10 +2106,13 @@ export async function resolveTargetRef(argv, env, ctx = {}) {
     '--header', 'User-Agent: career-ops-update-checker',
   ]);
   if (releaseRaw === null) {
+    // coderhub:start msg-release-api (D18)
     throw new Error(
-      `Could not reach ${RELEASES_API} to resolve the latest career-ops release. ` +
-      'Retry, or run with --channel main to update from the latest commit on main instead.',
+      `Could not reach ${RELEASES_API} to resolve the latest CoderHub OS release. ` +
+      'Either there is no connection, or GitHub\'s limit of 60 unauthenticated API requests per hour for this network was hit (it resets within the hour). ' +
+      'Retry later, or run with --channel main to update from the latest commit on main instead.',
     );
+    // coderhub:end msg-release-api
   }
 
   let tagName = '';
@@ -2132,11 +2137,13 @@ export async function resolveTargetRef(argv, env, ctx = {}) {
     // version). Fetching either anyway would silently install the wrong
     // content or crash on a nonexistent ref; naming it here turns that into
     // an actionable report instead.
+    // coderhub:start msg-release-tag (D18)
     throw new Error(
       `${RELEASES_API} returned '${tagName}', which is not a valid ${RELEASE_TAG_PREFIX}X.Y.Z release tag — ` +
-      `likely the sibling 'web' component's release surfacing instead of career-ops's, or a malformed tag. ` +
+      `likely a malformed tag. ` +
       'Retry, or run with --channel main to update from the latest commit on main instead.',
     );
+    // coderhub:end msg-release-tag
   }
   return tagName;
 }
@@ -2407,7 +2414,7 @@ async function check() {
 // reconciler keys off pattern presence, never off this marker, so a user who
 // deletes or moves it loses nothing.
 const GITIGNORE_BLOCK_HEADER = [
-  '# Added by career-ops update-system.mjs.',
+  '# Added by CoderHub OS update-system.mjs.', // coderhub (D18)
   '# System-owned ignore rules that were missing from this file. Your own rules',
   '# are never modified, reordered or removed: the updater only appends patterns',
   '# it cannot already find somewhere in this file. Reordering these lines, or',

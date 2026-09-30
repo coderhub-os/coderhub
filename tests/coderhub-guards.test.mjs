@@ -43,6 +43,10 @@ for (const name of readdirSync(ROOT).filter((f) => /^README[\w.-]*\.md$/.test(f)
   visible[name] = read(name);
 }
 visible['update-system.mjs (banner)'] = block(updater, 'banner');
+for (const b of ['msg-toplevel', 'msg-release-api', 'msg-release-tag']) {
+  visible[`update-system.mjs (${b})`] = block(updater, b);
+}
+visible['update-system.mjs (.gitignore header)'] = (updater.match(/^  '# Added by .*$/m) || [null])[0];
 visible['doctor.mjs (header)'] = (read('doctor.mjs').match(/console\.log\('\\n[^']*doctor'\)/) || [null])[0];
 const agents = read('AGENTS.md');
 for (const b of ['title', 'update-prompt', 'what-is', 'ready', 'manifesto', 'hired-wall']) {
