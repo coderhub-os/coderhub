@@ -62,6 +62,16 @@ La primera vez te guía por todo: instala lo que falte (`npm install`, Chromium 
 
 > **El sistema se personaliza con tu propio CLI.** Modos, arquetipos, pesos del scoring, guiones de negociación: pedile que los cambie. Lee los mismos archivos que usa, así que sabe qué tocar.
 
+## Primeros pasos
+
+1. **Setup.** La primera vez que escribís `/coderhub` te pide tu CV y tu LinkedIn. Pegalos enteros: cuanto mejor el input, mejor el output. Después te confirma tus datos, te pide el rango de sueldo que buscás y arma tu lista de portales (`portals.yml`).
+2. **Juntá ofertas.** `/coderhub scan` busca en tus portales y `/coderhub titles` te da más títulos para buscar en LinkedIn. Las que encuentres por tu lado, sumalas a `data/pipeline.md` (o pedile que las sume) y corré `/coderhub pipeline`.
+3. **Evaluá y postulá.** Pegá cada oferta: te da el score y, si vale la pena, el CV adaptado. Vos lo leés y vos postulás.
+4. **Seguí el pipeline.** `/coderhub tracker` y `/coderhub followup` te dicen dónde está cada postulación y a quién escribirle.
+5. **Preparate.** Cuando te llaman, `/coderhub interview-prep` y `/coderhub interview/practice`.
+
+**En Claude Code:** Sonnet con esfuerzo medio alcanza. Nombrá la sesión con `/rename CoderHub OS`; si se te apaga la compu, `claude --resume "CoderHub OS"` te deja donde estabas.
+
 ## Uso
 
 En los CLIs que registran slash commands (Claude Code, OpenCode, Cursor, Qwen y otros):
@@ -75,11 +85,14 @@ En los CLIs que registran slash commands (Claude Code, OpenCode, Cursor, Qwen y 
 /coderhub contacto    → Encuentra a quién escribirle y te arma el mensaje
 /coderhub deep        → Research a fondo de la empresa
 /coderhub interview-prep → Prep de entrevista para esa empresa
+/coderhub interview/practice → Práctica de entrevista, pregunta por pregunta, con feedback
 /coderhub pdf         → Solo el CV en PDF, optimizado para ATS
 /coderhub cover       → Cover letter
 /coderhub email       → Borrador de email de postulación (nunca lo manda)
 /coderhub apply       → Te ayuda a completar el formulario (el Submit lo hacés vos)
+/coderhub expand      → Competencias que te faltan y podés sumar al CV
 /coderhub scan        → Busca ofertas nuevas en los portales
+/coderhub titles      → Títulos de rol afines a tu CV, para ampliar la búsqueda
 /coderhub tracker     → Estado de tus postulaciones
 /coderhub followup    → Follow-ups vencidos y borradores
 /coderhub patterns    → Por qué te rechazan y cómo ajustar el target
