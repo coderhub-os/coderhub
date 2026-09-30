@@ -84,3 +84,4 @@ El updater de los clientes lee `VERSION` de `main` (`RAW_VERSION_URL`) y el tag 
 |---|---|
 | v1.0.0 | v1.34.0 |
 | v1.0.1 | v1.34.0 |
+| v1.0.2 | v1.34.0 |
