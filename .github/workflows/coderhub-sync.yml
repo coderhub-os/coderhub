@@ -128,7 +128,10 @@ jobs:
           if [ -n "$issue" ]; then
             gh issue comment "$issue" --body "$body"
           else
-            gh issue create --title "$CONFLICT_TITLE" --assignee "$REVIEWER" --body "$body"
+            # No --assignee: recent gh assigns via a GraphQL mutation App tokens can't call.
+            url=$(gh issue create --title "$CONFLICT_TITLE" --body "$body")
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${url##*/}/assignees" -f "assignees[]=$REVIEWER" >/dev/null \
+              || echo "::warning::Could not assign $REVIEWER to $url"
           fi
           echo "::error::Merge conflicts with upstream; see the issue."
           exit 1
@@ -186,7 +189,10 @@ jobs:
             gh pr edit "$pr" --title "$title" --body "$body"
           else
             draft=""; [ "$TESTS" = success ] || draft="--draft"
-            gh pr create --base "$BASE_BRANCH" --head "$SYNC_BRANCH" --title "$title" --body "$body" --reviewer "$REVIEWER" $draft
+            # No --reviewer: same GraphQL path as --assignee; REST works with App tokens.
+            url=$(gh pr create --base "$BASE_BRANCH" --head "$SYNC_BRANCH" --title "$title" --body "$body" $draft)
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/pulls/${url##*/}/requested_reviewers" -f "reviewers[]=$REVIEWER" >/dev/null \
+              || echo "::warning::Could not request a review from $REVIEWER on $url"
           fi
 
           issue=$(gh issue list --state open --search "in:title \"$CONFLICT_TITLE\"" --json number --jq '.[0].number')
