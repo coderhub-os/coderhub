@@ -53,6 +53,7 @@ Los parches en código van entre marcadores `coderhub:start <nombre>` / `coderhu
 - **Links a upstream que no se ejecutan:** `hired-share.mjs` (`REPO_URL`) y `manifesto.mjs` (`PAGE`). El cliente nunca los corre.
 - **`scaffolder/bin/cli.mjs`:** la URL de Docs apunta a upstream. El scaffolder `npx` no es parte del flujo de CoderHub.
 - **Docs internos e issue templates** siguen enlazando `career-ops-hq`: `docs/CODEX.md` (17 menciones), `LEGAL_DISCLAIMER.md` (5), `.github/ISSUE_TEMPLATE/`. El README no los enlaza.
+- **`.github/FUNDING.yml`, `funding.json` y `.well-known/funding-manifest-urls`** quedan como upstream (decidido 2026-10-01). Desde v1.0.3 `FUNDING.yml` dice `open_collective: career-ops`, pero GitHub solo muestra el botón Sponsor si el repo tiene prendido *Settings → Features → Sponsorships*, y viene apagado en el motor y en los repos creados desde el template. No lo prendas.
 - **`package-lock.json`** (untracked en la raíz) conserva el nombre de upstream.
 - **Rate limit sin `gh`:** un cliente sin `gh` logueado sigue con 60 pedidos por hora por IP. En una red compartida puede quedarse sin cuota; desde D19 se entera (`rate-limited`) en vez de no saber nada. `--channel main` (`checkMainChannel`) no distingue el rate limit: sigue diciendo `offline`.
 
@@ -85,3 +86,4 @@ El updater de los clientes lee `VERSION` de `main` (`RAW_VERSION_URL`) y el tag 
 | v1.0.0 | v1.34.0 |
 | v1.0.1 | v1.34.0 |
 | v1.0.2 | v1.34.0 |
+| v1.0.3 | v1.34.0 (`7521f7fe`, 33 commits después del tag) |
