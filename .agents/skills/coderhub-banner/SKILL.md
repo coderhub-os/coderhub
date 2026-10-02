@@ -55,7 +55,7 @@ Armá los 4 bloques (design-spec §4):
 - **Eyebrow (mono):** `{ROL SENIORITY} @ {EMPRESA}`, o `{ROL} · {AÑOS}+ YRS` si no hay empresa para mostrar. Con **stealth on** (sección `## Stealth` de `modes/_profile.md`) la empresa actual se puede mostrar igual que en el perfil; si el cliente prefiere no nombrarla, usá la forma sin empresa.
 - **Nombre:** el nombre de la persona (un nombre de pila + apellido, igual que el nombre visible de LinkedIn).
 - **Tagline:** una línea de qué hace + diferenciador. Nada genérico ("passionate developer").
-- **Stack:** 6-9 tecnologías reales, **incluida AI** si la usa (ej. Claude Code · MCP). Cada una con su slug de [Simple Icons](https://simpleicons.org) (ej. `{"name": "Java", "slug": "openjdk"}`).
+- **Stack:** 6-9 tecnologías reales, **incluida AI** si la usa (ej. Claude Code · MCP). Cada una con su slug de [Simple Icons](https://simpleicons.org) (ej. `{"name": "Go", "slug": "go"}`). Si un logo no se reconoce solo (ej. el de Java en Simple Icons es `openjdk`, la mascota Duke), dejá `"slug": ""` y sale como chip de texto con el nombre.
 
 **Idioma:** inglés (superficie global: recruiters internacionales, roles remotos). La conversación sigue en español.
 
@@ -100,7 +100,7 @@ node .agents/skills/coderhub-banner/render-banner.mjs /tmp/coderhub-banner.json 
 Sale a 2560×640 (el template escala tipografía y logos al ancho). Verificalo igual que en el Step 3 y dale el snippet:
 
 ```markdown
-<p align="center"><img src="./assets/banner.png" alt="{Nombre} — {rol}" width="100%"/></p>
+<p align="center"><img src="./assets/banner.png" alt="{Nombre}, {rol}" width="100%"/></p>
 ```
 
 ## Step 5 — Entregar e instrucciones

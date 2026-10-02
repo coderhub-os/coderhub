@@ -7,7 +7,7 @@ Después de optimizar el perfil, el algoritmo de LinkedIn premia actividad. Pero
 ### Diario (10-15 min/día)
 - ✅ **Like + comentario pensado** en 3-5 posts técnicos de devs/arquitectos del nicho. Es comportamiento normal de un dev — no levanta sospechas.
 - ✅ **Seguir 5-10 cuentas relevantes/semana**: empresas tech, founders del rubro, autores técnicos.
-- ✅ **Conexiones nuevas:** mandar 5-10 solicitudes/semana a recruiters, hiring managers o devs senior con stack similar. **Con nota personalizada siempre.**
+- ✅ **Conexiones nuevas:** la meta del método es **100 por semana** en la fase de prospección (`quality-bar.md` §14). De esas, 5-10 por semana van a recruiters o hiring managers de empresas target **con nota personalizada siempre**.
 
 ### Semanal (1-2 hs/semana)
 - ✅ **1 post propio técnico:** algo que aprendiste, un problema que resolviste, una arquitectura que diseñaste. Posiciona como experto sin gritar "busco trabajo".

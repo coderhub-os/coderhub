@@ -68,7 +68,7 @@ Lo que salga de acá también sirve de base para el portafolio en español.
    node build-cv-html.mjs /tmp/cv-{candidate}-{slug}-es.json output/cv-{candidate}-{slug}-es.html {template}
    ```
 
-5. **Fact gate (obligatorio):** `node verify-cv-facts.mjs output/cv-{candidate}-{slug}-es.html`. Si falla, la traducción metió algo que no está en `cv.md` o `article-digest.md`: sacalo y volvé a renderizar. No sigas con un gate en rojo. Con texto en español el gate sale en verde pero avisa que no chequeó los conteos (su extractor de sustantivos es solo en inglés): no es un fallo, pero compará vos cada número contra el CV en inglés antes de seguir.
+5. **Fact gate (obligatorio):** `node verify-cv-facts.mjs output/cv-{candidate}-{slug}-es.html`. Si falla, mirá qué frase marca: si es un dato que no está en `cv.md` o `article-digest.md`, sacalo; si es un dato real que el gate no reconoce por cómo quedó traducido (ej. "7 repos" contra "7-repo" de `cv.md`), reformulá la frase dejando el número con las mismas palabras que el original. Volvé a renderizar. No sigas con un gate en rojo. Con texto en español el gate sale en verde pero avisa que no chequeó los conteos (su extractor de sustantivos es solo en inglés): no es un fallo, pero compará vos cada número contra el CV en inglés antes de seguir.
 6. **PDF:**
 
    ```bash
@@ -81,7 +81,7 @@ Lo que salga de acá también sirve de base para el portafolio en español.
 ## LinkedIn a español
 
 1. **Fuente:** el `output/linkedin/*_linkedin-optimizado.md` más nuevo que no termine en `-es.md`. Si no hay: *"Primero armemos tu LinkedIn con `/coderhub linkedin` y después lo traducimos."* y pará.
-2. El archivo ES es **una copia del documento entero** donde se traducen **solo los textos para pegar** (headline elegido, About, Experience, Projects, Education y las descripciones de Featured) con las "Reglas de traducción" de arriba. Los encabezados, explicaciones y checklists ya están en español y quedan igual. Lo que en Featured es solo una recomendación (qué destacar), queda como está.
+2. El archivo ES es **una copia del documento entero** donde se traducen **solo los textos para pegar** (headline elegido, o las 3 variantes si todavía no eligió; About, Experience, Projects, Education con el título del grado incluido, y las descripciones de Featured) con las "Reglas de traducción" de arriba. Los encabezados, explicaciones y checklists ya están en español y quedan igual. Lo que en Featured es solo una recomendación (qué destacar), queda como está.
 3. **Headline:** traducilo respetando los 220 caracteres. Las keywords técnicas y el rol quedan en inglés (regla de traducción 3), así que muchas veces el headline casi no cambia: está bien.
 4. **No se traducen:** Skills (LinkedIn las tiene como entidades en inglés), Licenses & certifications (nombres oficiales) y los títulos de rol de Open to Work (los recruiters buscan en inglés).
 5. **Cómo se usa (explicáselo):** LinkedIn permite un **perfil secundario en otro idioma** (perfil → "Agregar perfil en otro idioma"). El perfil principal queda en inglés; el de español se ve para quien tiene LinkedIn en español. No reemplaces el principal.

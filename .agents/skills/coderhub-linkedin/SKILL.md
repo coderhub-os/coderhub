@@ -87,7 +87,7 @@ Leé `references/stealth-mode.md`.
 
 **Antes de generar, leé `references/quality-bar.md`**: es el método CoderHub para un buen perfil (qué sí, qué no y por qué en cada sección). Para los bullets, leé `references/bullets.md`. Se copia el nivel y las reglas, nunca los datos de los ejemplos.
 
-Usá las plantillas de `references/section-templates.md`. Cada sección se llena con los datos del cliente, no se inventa.
+Usá las plantillas de `references/section-templates.md`. Cada sección se llena con los datos del cliente, no se inventa. Si `modes/_writing.md` o `voice-dna.md` prohíben algo que usan las plantillas (em dashes, ciertas palabras), ganan ellos. En las variantes A y C del headline, el stack va curado (las keywords del rol target), no entero (`quality-bar.md` §5).
 
 ### 3.0 Capa visual e identidad (foto · banner · nombre visible)
 

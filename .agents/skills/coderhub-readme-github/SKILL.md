@@ -58,7 +58,7 @@ gh api "users/{usuario}/repos?sort=pushed&per_page=100" --jq 'sort_by(-.stargaze
 
 **Curá (quality-bar §4):** elegí **3-8 proyectos**: los que tienen estrellas, un producto real o deployado, o son relevantes al **rol target** (un proyecto de AI o agentes hoy es un diferencial fuerte). **Nunca** los vuelques todos ni listes sandboxes de aprendizaje o tutoriales (señalizan junior). Si un repo relevante no tiene descripción, inferí qué resuelve de su contenido (`gh api repos/{usuario}/{repo}/readme`) o preguntale al cliente: no inventes el outcome.
 
-Si el cliente **no tiene proyectos públicos fuertes**, no fuerces la sección: apoyate en value prop + experiencia + (si escribe) un feed de blog.
+Si el cliente **no tiene proyectos públicos fuertes**, no fuerces la sección: apoyate en value prop + experiencia + (si escribe) un feed de blog. Si su prueba fuerte está en repos de una org o privados (ej. el producto de su empresa, que `gh api` no deja ver por SAML), usá los proyectos de `cv.md` con su tag `private` o el link que figure en `cv.md` o `profile.yml`. **Links:** solo los que salen de `gh api`, `cv.md` o `profile.yml`, o los que el cliente te pase; nunca armes una URL a partir de un nombre (npm, sitio, docs). Su propio negocio o side project (ej. una mentoría o un SaaS) entra solo si el cliente quiere y está en `cv.md`.
 
 ## Step 3 — Idioma y arquetipo
 
@@ -93,7 +93,7 @@ Antes de entregar, pasá el texto por el filtro anti-slop (quality-bar §8 y `.a
    2. Pegá este contenido como README.md en la raíz
    3. Commit → aparece arriba de tu perfil al instante
    ```
-   Si el repo ya existe, es reemplazar su `README.md`. Si usás el banner, subí `banner.png` a `assets/` del mismo repo.
+   Antes de dar los pasos, chequeá si ya existe: `gh api repos/{usuario}/{usuario} --jq .html_url`. Si existe, es reemplazar su `README.md`: mostrale qué cambia contra el actual (`gh api repos/{usuario}/{usuario}/readme -H "Accept: application/vnd.github.raw"`) y que conserve lo que use para otra cosa (ej. si ese repo también publica su sitio). Si usás el banner, subí `banner.png` a `assets/` del mismo repo.
 3. Recordá la **coherencia**: que el rol target y los logros coincidan con su CV y su LinkedIn.
 
 No crees el repo ni pushees nada por el cliente: le das el archivo y los pasos.
