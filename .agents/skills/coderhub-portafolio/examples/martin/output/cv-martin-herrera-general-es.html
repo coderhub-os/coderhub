@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Martín Herrera | CV</title>
+<style>
+  :root { --accent-color: hsl(187 74% 32%); --font-size: 11px; --page-margin: 0.6in; }
+  @page { margin: var(--page-margin); }
+  body { font-family: "Liberation Sans", Arial, sans-serif; font-size: var(--font-size); color: #1a1a2e; margin: 0; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .header-gradient { height: 2px; background: var(--accent-color); margin: 6px 0; }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 6px; font-size: 10px; }
+  .contact-row a { color: inherit; text-decoration: none; }
+  .contact-row .separator { color: #999; }
+  .section { margin-top: 14px; }
+  .section-title { font-weight: 700; text-transform: uppercase; color: var(--accent-color); border-bottom: 1px solid #ddd; margin-bottom: 6px; }
+  ul { margin: 4px 0 0 16px; padding: 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Martín Herrera</h1>
+    <div class="title">Senior Backend Engineer</div>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <a href="tel:+5493515550142">+54 9 351 555 0142</a>
+      <span class="separator">|</span>
+      <a href="mailto:martin.herrera@example.com">martin.herrera@example.com</a>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/martinherrera-demo">linkedin.com/in/martinherrera-demo</a>
+      <span class="separator">|</span>
+      <a href="https://github.com/martinherrera-demo">github.com/martinherrera-demo</a>
+      <span class="separator">|</span>
+      <span>Córdoba, Argentina</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Resumen profesional</div>
+    <div class="summary-text">Backend engineer con 4 años construyendo servicios de pagos e integraciones en Node.js y TypeScript.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Experiencia</div>
+    <p><strong>Nimbus Pay</strong>: Senior Backend Engineer (jul 2024 - actualidad)</p>
+    <ul>
+      <li>Rediseñé el servicio de ledger de partida doble sobre PostgreSQL: las diferencias de conciliación bajaron de ~300 a menos de 10 por mes.</li>
+      <li>Construí una plataforma idempotente de entrega de webhooks sobre Redis Streams, con reintentos y payloads firmados.</li>
+    </ul>
+    <p><strong>Tandem Labs</strong>: Backend Developer (ago 2021 - feb 2023)</p>
+    <ul>
+      <li>Construí APIs REST y GraphQL en Node.js para 6 clientes B2B SaaS.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Formación</div>
+    <p>Ingeniería en Sistemas de Información, Universidad Tecnológica Nacional (UTN), Córdoba</p>
+  </div>
+</div>
+</body>
+</html>

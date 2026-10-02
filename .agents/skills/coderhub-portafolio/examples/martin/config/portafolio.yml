@@ -9,6 +9,7 @@ dominio: null
 url: null
 
 titular: "Senior Backend Engineer building payment platforms in Node.js"
+eyebrow: "Payments · Node.js · TypeScript"
 foto: null
 
 sobre_mi: |
@@ -27,6 +28,7 @@ proyectos:
     links:
       repo: "https://github.com/martinherrera-demo/ledger-lite"
       demo: null
+      docs: "https://ledger-lite.example.com/docs"
   - nombre: "webhook-relay"
     descripcion: "Webhook delivery service with signed payloads, retries with backoff and a replay console."
     stack: [Node.js, Redis Streams, Fastify]
@@ -71,8 +73,9 @@ cv_pdf:
 # Bloque que escribe /coderhub traducir portafolio (por posición). `fuente` es
 # el hash del contenido EN (build.mjs --dump-content): si cambia, avisa.
 es:
-  fuente: "b6758e7f45f9"
+  fuente: "d96aae2b9639"
   titular: "Senior Backend Engineer que construye plataformas de pagos en Node.js"
+  eyebrow: "Pagos · Node.js · TypeScript"
   sobre_mi: |
     Construyo el backend de productos de pagos: ledgers, APIs de payouts y la
     plomería de webhooks de la que dependen los comercios. En **Nimbus Pay** soy
@@ -111,3 +114,6 @@ es:
     - grupo: "Infra"
     - grupo: "Idiomas"
       items: "Español (nativo), inglés (B2)"
+  certificaciones:
+    - "AWS Certified Developer – Associate (2024)"
+    - "MongoDB Associate Developer (2022)"

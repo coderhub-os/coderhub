@@ -1,7 +1,7 @@
 {
   "es": {
     "lang_name": "Español",
-    "og_locale": "es_AR",
+    "og_locale": "es_LA",
     "skip": "Saltar al contenido",
     "nav_label": "Secciones",
     "lang_label": "Idioma",
@@ -23,9 +23,10 @@
     },
     "repo": "Código",
     "demo": "Demo",
+    "docs": "Documentación",
     "certifications": "Certificaciones",
-    "contact_lead": "¿Hablamos? Escribime por mail o por cualquiera de estos canales.",
-    "contact_lead_noemail": "¿Hablamos? Encontrame en cualquiera de estos canales.",
+    "contact_lead": "¿Conversamos? El email es la vía más directa; también estoy en estos canales.",
+    "contact_lead_noemail": "¿Conversamos? Estoy disponible en cualquiera de estos canales.",
     "contact": {
       "email": "Email",
       "linkedin": "LinkedIn",
@@ -37,7 +38,7 @@
     "links": "Links",
     "back_to_top": "Volver arriba",
     "not_found_title": "Página no encontrada",
-    "not_found_text": "La página que buscás no existe o cambió de lugar.",
+    "not_found_text": "Esta página no existe o cambió de lugar.",
     "not_found_home": "Ir al inicio",
     "cmd": {
       "about": "cat sobre-mi.md",
@@ -73,6 +74,7 @@
     },
     "repo": "Code",
     "demo": "Demo",
+    "docs": "Docs",
     "certifications": "Certifications",
     "contact_lead": "Let's talk. Email me or reach out on any of these channels.",
     "contact_lead_noemail": "Let's talk. Find me on any of these channels.",

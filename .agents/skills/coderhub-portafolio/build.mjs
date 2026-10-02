@@ -25,8 +25,8 @@
 
 import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'fs';
-import { basename, dirname, extname, isAbsolute, join, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 import * as yaml from 'js-yaml';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -35,6 +35,7 @@ const THEMES = ['minimalista', 'glassmorphism', 'neobrutalism', 'terminal'];
 const LANGS = ['es', 'en'];
 const CONTACTS = ['email', 'linkedin', 'github', 'twitter', 'telefono', 'ubicacion'];
 const MODES = ['auto', 'light', 'dark'];
+const PROJECT_LINKS = ['repo', 'demo', 'docs'];
 const HOSTINGS = ['github-pages', 'vercel'];
 const OG = { width: 1200, height: 630 };
 const PHOTO_PX = 600;
@@ -138,7 +139,7 @@ function localizeDates(s, lang, nowWord) {
       return i === -1 ? m : MONTHS[lang][i];
     })
     .replace(new RegExp(`\\b${NOW_RX}\\b`, 'gi'), nowWord)
-    .replace(/\s*(?:-|–|—|\bto\b|\bhasta\b)\s*/g, ' – ');
+    .replace(/\s*(?:-|–|—|\bto\b|\bhasta\b)\s*/g, ' - ');
 }
 
 // ── parser de cv.md ───────────────────────────────────────────────────────
@@ -264,6 +265,40 @@ function parseExperience(lines) {
     else if (co) co.lugar = [co.lugar, text].filter(Boolean).join(' · ');
   }
   return companies.filter((c) => c.empresa || c.roles.length);
+}
+
+const PLACE_CONNECTORS = new Set(['de', 'del', 'la', 'las', 'los', 'el', 'y', 'of', 'the', 'and', 'do', 'da', 'dos', 'das']);
+const fold = (s) => str(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+/**
+ * ¿El bullet es solo una ubicación ("Buenos Aires, Argentina.")? Corto (≤5
+ * palabras), sin dígitos y o bien con coma y todo en mayúscula inicial (nombres
+ * de lugar, sin verbos), o bien empieza con la ciudad de profile.yml.
+ */
+export function isLocationBullet(text, city = '') {
+  const t = stripMd(text).replace(/[.;]+$/, '').replace(/\((?:remote|remoto|hybrid|h[ií]brido|on-?site|presencial)\)/i, '').trim();
+  if (!t || /\d/.test(t)) return false;
+  const words = t.split(/[\s,]+/).filter(Boolean);
+  if (words.length > 5) return false;
+  const c = fold(city);
+  if (c && (fold(t) === c || fold(t).startsWith(`${c},`) || fold(t).startsWith(`${c} `))) return true;
+  if (!t.includes(',')) return false;
+  return words.every((w) => /^\p{Lu}/u.test(w) || PLACE_CONNECTORS.has(w.toLowerCase()));
+}
+
+/** Saca de los bullets las líneas que son solo ubicación (no son logros). */
+function dropLocationBullets(cv, city, warnings) {
+  for (const co of cv.experience)
+    for (const r of co.roles) {
+      const keep = [];
+      for (const b of r.bullets) {
+        if (isLocationBullet(b, city)) {
+          r.contexto = [r.contexto, stripMd(b).replace(/[.;]+$/, '')].filter(Boolean).join(' · ');
+          warnings.push(`cv.md: en ${co.empresa || 'experiencia'}${r.rol ? ` (${r.rol})` : ''} el bullet "${stripMd(b)}" parece una ubicación, no un logro: no lo publico como bullet. Pasalo a una línea sin "- " en cv.md`);
+        } else if (str(b)) keep.push(b);
+      }
+      r.bullets = keep;
+    }
 }
 
 function parseEducation(lines) {
@@ -421,6 +456,7 @@ function validate(cfg, profile, root, themeOverride, errors, warnings) {
     else if (!/\.(jpe?g|png|webp)$/i.test(p)) errors.push(`portafolio.yml: foto "${cfg.foto}" tiene que ser .jpg, .png o .webp`);
   }
   if (cfg.sobre_mi !== undefined && cfg.sobre_mi !== null && typeof cfg.sobre_mi !== 'string') errors.push('portafolio.yml: `sobre_mi` tiene que ser texto');
+  if (cfg.eyebrow !== undefined && cfg.eyebrow !== null && typeof cfg.eyebrow !== 'string') errors.push('portafolio.yml: `eyebrow` tiene que ser texto (ej. "Node.js · TypeScript · AWS")');
 
   const proyectos = cfg.proyectos ?? [];
   if (!Array.isArray(proyectos)) errors.push('portafolio.yml: `proyectos` tiene que ser una lista');
@@ -432,8 +468,10 @@ function validate(cfg, profile, root, themeOverride, errors, warnings) {
       if (!str(p.descripcion)) errors.push(`${where}: falta descripcion`);
       if (p.stack !== undefined && p.stack !== null && !Array.isArray(p.stack)) errors.push(`${where}: stack tiene que ser una lista`);
       for (const [k, v] of Object.entries(p.links || {})) {
-        if (!['repo', 'demo'].includes(k)) errors.push(`${where}: link "${k}" desconocido (valores: repo, demo)`);
-        else if (v && !isHttps(str(v))) errors.push(`${where}: links.${k} "${v}" tiene que ser una URL https:// (http:// es contenido mixto)`);
+        if (!PROJECT_LINKS.includes(k)) errors.push(`${where}: link "${k}" desconocido (valores: ${PROJECT_LINKS.join(', ')})`);
+        else if (k === 'docs') {
+          if (v && !/^https?:\/\/[^\s/]+\.[^\s]+$/i.test(str(v))) errors.push(`${where}: links.docs "${v}" tiene que ser una URL http:// o https://`);
+        } else if (v && !isHttps(str(v))) errors.push(`${where}: links.${k} "${v}" tiene que ser una URL https:// (http:// es contenido mixto)`);
       }
     });
 
@@ -500,14 +538,50 @@ function englishContent(cfg, profile, cv, maxBullets) {
     for (const r of co.roles) experiencia.push({ empresa: co.empresa, rol: r.rol, bullets: r.bullets.slice(0, maxBullets) });
   const content = {
     titular,
+    // `eyebrow` solo viaja a la traducción si es texto propio (el default son nombres del stack).
+    ...(str(cfg.eyebrow) ? { eyebrow: str(cfg.eyebrow) } : {}),
     sobre_mi: sobre,
     proyectos: (cfg.proyectos || []).map((p) => ({ nombre: str(p.nombre), descripcion: str(p.descripcion) })),
     experiencia,
     educacion: cfg.secciones?.educacion === false ? [] : cv.education.map((e) => ({ titulo: e.titulo, institucion: e.institucion, detalle: e.detalle })),
     habilidades: cv.skills.map((g) => ({ grupo: g.grupo, items: g.items })),
+    certificaciones: cfg.secciones?.certificaciones === false ? [] : [...cv.certifications],
   };
   const fuente = createHash('sha256').update(JSON.stringify(content)).digest('hex').slice(0, 12);
   return { content, fuente };
+}
+
+const PENDING_RX = /pending|TODO|TBD|pendiente|exact list|\[.*?\]\s*$/i;
+const PENDING_PAREN_RX = /\((?:plus|and|y|más|mas)\b[^)]*\b(?:other|otr[oa]s)\b[^)]*\)/i;
+const ES_MARKERS = [' de ', ' y ', ' del ', ' para ', 'ción', ' en el '];
+
+/** Campos publicados del contenido EN, con su ubicación legible. */
+function publishedFields(en) {
+  const out = [];
+  const add = (where, text, kind = 'text') => str(text) && out.push({ where, text: str(text), kind });
+  add('titular', en.titular);
+  add('eyebrow', en.eyebrow);
+  add('sobre_mi', en.sobre_mi);
+  en.proyectos.forEach((p, i) => add(`proyectos[${i}] (${p.nombre})`, p.descripcion));
+  en.experiencia.forEach((r, i) => {
+    add(`experiencia[${i}].rol`, r.rol, 'role');
+    r.bullets.forEach((b, j) => add(`experiencia[${i}] (${r.rol || r.empresa}) bullet ${j + 1}`, b));
+  });
+  en.educacion.forEach((e, i) => add(`educacion[${i}].detalle`, e.detalle));
+  en.certificaciones.forEach((c, i) => add(`certificaciones[${i}]`, c));
+  return out;
+}
+
+/** Warnings de contenido: notas pendientes y español en el contenido EN. */
+function contentWarnings(en, warnings) {
+  for (const f of publishedFields(en)) {
+    if (PENDING_RX.test(f.text) || PENDING_PAREN_RX.test(f.text))
+      warnings.push(`${f.where} parece una nota pendiente y se publicaría tal cual: "${truncate(f.text, 90)}". Completalo o sacalo de cv.md / portafolio.yml`);
+    const t = ` ${f.text.toLowerCase()} `;
+    const hits = ES_MARKERS.filter((m) => t.includes(m)).length;
+    if (hits >= 2 || (f.kind === 'role' && /[ñáéíóú]/i.test(f.text)))
+      warnings.push(`${f.where} parece estar en español y es contenido EN: "${truncate(f.text, 90)}". El contenido base va en inglés; el español va en el bloque \`es:\``);
+  }
 }
 
 /** Aplica el bloque de traducción (por posición) sobre el contenido EN. */
@@ -520,6 +594,7 @@ function translated(en, block) {
   };
   return {
     titular: str(block.titular) || en.titular,
+    ...(en.eyebrow !== undefined ? { eyebrow: str(block.eyebrow) || en.eyebrow } : {}),
     sobre_mi: str(block.sobre_mi) || en.sobre_mi,
     proyectos: en.proyectos.map((p, i) => ({ ...p, descripcion: str(pick(block.proyectos, i, 'descripcion', p.descripcion)) })),
     experiencia: en.experiencia.map((r, i) => {
@@ -535,8 +610,20 @@ function translated(en, block) {
       grupo: str(pick(block.habilidades, i, 'grupo', g.grupo)),
       items: str(pick(block.habilidades, i, 'items', g.items)),
     })),
+    certificaciones: en.certificaciones.map((x, i) => {
+      const v = Array.isArray(block.certificaciones) ? block.certificaciones[i] : undefined;
+      return typeof v === 'string' && str(v) ? str(v) : x;
+    }),
   };
 }
+
+/** Sin em/en dash en títulos: " | " entre frases, "-" pegado entre palabras. */
+const noDash = (s) => str(s).replace(/\s+[—–]\s+/g, ' | ').replace(/[—–]/g, '-');
+
+const bulletsHtml = (bullets) => {
+  const list = (bullets || []).map(str).filter(Boolean);
+  return list.length ? `<ul class="role__bullets">${list.map((b) => `<li>${inline(b)}</li>`).join('')}</ul>` : '';
+};
 
 // ── logos e íconos ────────────────────────────────────────────────────────
 
@@ -717,9 +804,12 @@ function privacyRules({ profile, cfg, contacto, root, cvText, allowedText }) {
   rules.push({ label: 'document.cookie', test: (t) => /document\.cookie/i.test(t), value: 'document.cookie' });
   rules.push({ label: '<script src= externo', test: (t) => /<script[^>]*\ssrc\s*=\s*["']?(https?:)?\/\//i.test(t), value: '<script src=' });
   rules.push({ label: 'recurso remoto (fuentes/CSS)', test: (t) => /@import\s+url\(\s*["']?(https?:)?\/\/|<link[^>]+rel=["']?stylesheet[^>]+href=["']?(https?:)?\/\//i.test(t), value: '@import/stylesheet remoto' });
+  // proyectos[].links.docs acepta http:// (es un link de navegación, no un recurso): se exime ese href exacto.
+  const docsHttp = (cfg.proyectos || []).map((p) => str(p?.links?.docs)).filter((u) => /^http:\/\//i.test(u));
+  const dropDocs = (t) => docsHttp.reduce((acc, u) => acc.split(`href="${esc(u)}"`).join(''), t);
   rules.push({
     label: 'http:// (contenido mixto)',
-    test: (t) => /http:\/\//i.test(t.replace(/\bxmlns(:[\w-]+)?\s*=\s*["']http:\/\/[^"']*["']/gi, '')),
+    test: (t) => /http:\/\//i.test(dropDocs(t).replace(/\bxmlns(:[\w-]+)?\s*=\s*["']http:\/\/[^"']*["']/gi, '')),
     value: 'http://',
   });
   return rules;
@@ -784,6 +874,103 @@ async function renderPng(html) {
   }
 }
 
+// ── CV en PDF sin teléfono ────────────────────────────────────────────────
+
+const escRx = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** HTML del que salió el PDF: X.pdf → X.html (o sin el sufijo -AAAA-MM-DD). */
+function siblingHtml(pdfPath) {
+  const base = pdfPath.replace(/\.pdf$/i, '');
+  for (const cand of [`${base}.html`, `${base.replace(/-\d{4}-\d{2}-\d{2}$/, '')}.html`]) if (existsSync(cand)) return cand;
+  return null;
+}
+
+/** Saca el link tel: (con su separador) y toda aparición del teléfono. */
+export function stripPhone(html, phone) {
+  const SEP = `<span\\b[^>]*class=["'][^"']*\\bseparator\\b[^"']*["'][^>]*>[^<]*</span>`;
+  const TEL = `<a\\b[^>]*href\\s*=\\s*["']tel:[^"']*["'][^>]*>[\\s\\S]*?</a>`;
+  let out = html.replace(/<!--[\s\S]*?-->/g, '');
+  out = out.replace(new RegExp(`${TEL}\\s*${SEP}`, 'gi'), '');
+  out = out.replace(new RegExp(`(?:${SEP}\\s*)?${TEL}`, 'gi'), '');
+  const p = str(phone);
+  if (p) {
+    out = out.replace(new RegExp(escRx(p), 'gi'), '');
+    const d = p.replace(/\D/g, '');
+    if (d.length >= 7) out = out.replace(new RegExp(`\\+?${d.split('').join('[\\s().\\-]*')}`, 'g'), '');
+  }
+  return out;
+}
+
+/** Tamaño de hoja del PDF original (MediaBox), para re-renderizar igual. */
+function pdfPageSize(buf) {
+  const m = buf.toString('latin1').match(/\/MediaBox\s*\[\s*[-\d.]+\s+[-\d.]+\s+([\d.]+)\s+([\d.]+)\s*\]/);
+  if (!m) return null;
+  const [w, h] = [Number(m[1]), Number(m[2])];
+  if (Math.abs(w - 612) < 4 && Math.abs(h - 792) < 4) return 'letter';
+  if (Math.abs(w - 595.3) < 4 && Math.abs(h - 841.9) < 4) return 'A4';
+  return `${(w / 72).toFixed(3)}in ${(h / 72).toFixed(3)}in`;
+}
+
+/** Fuentes `./fonts/x` como data: (el motor las resuelve contra la raíz del repo). */
+function inlineFonts(html, dirs) {
+  const MIME = { woff2: 'font/woff2', woff: 'font/woff', otf: 'font/otf', ttf: 'font/ttf' };
+  return html.replace(/url\(\s*(['"]?)\.\/fonts\/([^'")\s]+)\1\s*\)/g, (all, q, name) => {
+    if (name.includes('..')) return all;
+    const file = dirs.map((d) => join(d, 'fonts', name)).find((f) => existsSync(f));
+    if (!file) return all;
+    const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+    return `url('data:${MIME[ext] || 'application/octet-stream'};base64,${readFileSync(file).toString('base64')}')`;
+  });
+}
+
+/** Re-renderiza el HTML (ya limpio) a PDF, con las opciones del motor. */
+async function renderPdf(html, htmlPath, size, root) {
+  let doc = inlineFonts(html, [dirname(htmlPath), root]);
+  if (size) {
+    const page = `<style>@page { size: ${size}; margin: var(--page-margin, 0.6in); }</style>`;
+    doc = /<\/head>/i.test(doc) ? doc.replace(/<\/head>/i, () => `${page}\n</head>`) : `${page}\n${doc}`;
+  }
+  const ctx = await (await browser()).newContext({ javaScriptEnabled: false });
+  try {
+    const page = await ctx.newPage();
+    await page.route('**/*', (route) => {
+      const url = route.request().url();
+      return url.startsWith('file:') || url.startsWith('data:') ? route.continue() : route.abort();
+    });
+    // goto da el origen file:// (assets relativos a la carpeta del HTML); setContent
+    // reemplaza el documento por la versión sin teléfono sin escribir nada a disco.
+    await page.goto(pathToFileURL(htmlPath).href, { waitUntil: 'load' });
+    await page.setContent(doc, { waitUntil: 'load' });
+    await page.evaluate(() => document.fonts.ready);
+    return await page.pdf({
+      printBackground: true,
+      margin: { top: '0', right: '0', bottom: '0', left: '0' },
+      preferCSSPageSize: true,
+    });
+  } finally {
+    await ctx.close();
+  }
+}
+
+/** Qué datos de contacto lleva el HTML del CV (para el resumen `publico`). */
+function pdfContactData(html, profile, keptPhone) {
+  const c = profile.candidate || {};
+  const raw = html.replace(/<!--[\s\S]*?-->/g, '').replace(/<(style|script)\b[\s\S]*?<\/\1>/gi, '');
+  const text = raw.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&');
+  const lower = raw.toLowerCase();
+  const has = (v) => str(v).length >= 4 && lower.includes(str(v).toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, ''));
+  const out = [];
+  if (has(c.email) || /mailto:/i.test(raw)) out.push('email');
+  if (keptPhone && (/href\s*=\s*["']tel:/i.test(raw) || has(c.phone))) out.push('telefono');
+  if (has(c.linkedin) || /linkedin\.com\//i.test(raw)) out.push('linkedin');
+  if (has(c.github) || /github\.com\//i.test(raw)) out.push('github');
+  if (has(c.twitter) || /(?:twitter|x)\.com\//i.test(raw)) out.push('twitter');
+  if (has(c.portfolio_url)) out.push('portfolio_url');
+  const city = str(profile.location?.city) || str(c.location).split(',')[0];
+  if (city && fold(text).includes(fold(city))) out.push(`ubicacion (${city})`);
+  return out;
+}
+
 // ── main ──────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -814,6 +1001,7 @@ async function main() {
   const errors = [];
   const warnings = [];
   const v = validate(cfg, profile, root, args.theme, errors, warnings);
+  dropLocationBullets(cv, str(profile.location?.city) || str(profile.candidate?.location).split(',')[0], warnings);
   if (cv.experience.length === 0) warnings.push('cv.md: no encontré experiencia (## Work Experience con ### Empresa); la sección no se publica');
   if (errors.length) die(`portafolio.yml tiene errores:\n${errors.map((e) => `  - ${e}`).join('\n')}`);
 
@@ -822,6 +1010,7 @@ async function main() {
   if (!en.titular) warnings.push('no hay titular: poné `titular` en portafolio.yml o candidate.title en profile.yml');
   if (!en.sobre_mi) warnings.push('no hay `sobre_mi` en portafolio.yml ni resumen en cv.md: la sección "sobre mí" no se publica');
   else if (!str(cfg.sobre_mi)) warnings.push('`sobre_mi` vacío en portafolio.yml: usé el resumen de cv.md');
+  contentWarnings(en, warnings);
 
   if (args['dump-content']) {
     writeFileSync(1, `${JSON.stringify({ idioma: 'en', fuente, ...en }, null, 2)}\n`);
@@ -884,13 +1073,32 @@ async function main() {
     photoDataUrl = `data:image/jpeg;base64,${jpg.toString('base64')}`;
   }
 
-  // PDFs.
+  // PDFs. Sin `telefono` en `contacto`, el PDF se re-renderiza desde su HTML
+  // hermano sin el teléfono (el PDF original lo trae en el encabezado).
   const pdfs = {};
+  const pdfHtml = new Map();
   for (const [lang, rel] of Object.entries(cfg.cv_pdf || {})) {
     if (!rel) continue;
     const name = `cv-${nameSlug}-${lang}.pdf`;
-    put(name, readFileSync(resolve(root, str(rel))), true);
-    pdfs[lang] = { file: name, source: str(rel) };
+    const src = resolve(root, str(rel));
+    const original = readFileSync(src);
+    const sibling = siblingHtml(src);
+    if (contacto.includes('telefono')) {
+      put(name, original, true);
+      pdfs[lang] = { file: name, source: str(rel), html: sibling ? readFileSync(sibling, 'utf8') : null, sinTelefono: false };
+      continue;
+    }
+    if (!sibling) {
+      if (str(c.phone))
+        die(`tu CV en PDF tiene tu teléfono y no encuentro ${basename(src).replace(/\.pdf$/i, '.html')} para generar una versión sin él: regenerá el CV o poné cv_pdf: null`);
+      warnings.push(`cv_pdf.${lang}: no hay teléfono en profile.yml ni ${basename(src).replace(/\.pdf$/i, '.html')} al lado del PDF: lo publico tal cual. Revisá que no tenga tu teléfono`);
+      put(name, original, true);
+      pdfs[lang] = { file: name, source: str(rel), html: null, sinTelefono: false };
+      continue;
+    }
+    const html = stripPhone(readFileSync(sibling, 'utf8'), c.phone);
+    pdfHtml.set(`${name} (desde ${relative(root, sibling)})`, { data: html });
+    pdfs[lang] = { file: name, source: str(rel), html, htmlPath: sibling, size: pdfPageSize(original), sinTelefono: true };
   }
 
   // Links de contacto (whitelist).
@@ -955,7 +1163,7 @@ async function main() {
     const nav = [];
 
     // Hero.
-    const eyebrow = stackCfg.slice(0, 3).map((s) => s.name).join(' · ');
+    const eyebrow = k.eyebrow || stackCfg.slice(0, 3).map((s) => s.name).join(' · ');
     const linksHtml = links
       .map((l) => {
         const label = l.label ? `<span class="visually-hidden">${esc(l.label)}: </span>` : '';
@@ -998,7 +1206,7 @@ async function main() {
             return fill(partial('role'), {
               TITLE: esc(tr.rol),
               DATES: esc(localizeDates(r.fechas, lang, t.present)),
-              BULLETS: tr.bullets.length ? `<ul class="role__bullets">${tr.bullets.map((b) => `<li>${inline(b)}</li>`).join('')}</ul>` : '',
+              BULLETS: bulletsHtml(tr.bullets),
             }, 'role');
           })
           .join('\n');
@@ -1019,6 +1227,7 @@ async function main() {
           const src = cfg.proyectos[i];
           const plinks = Object.entries(src.links || {})
             .filter(([, u]) => u)
+            .filter(([kind]) => PROJECT_LINKS.includes(kind))
             .map(([kind, u]) => `<a class="project__link" href="${esc(str(u))}" rel="noopener">${esc(t[kind])}${icon('arrow')}<span class="visually-hidden"> ${esc(p.nombre)}</span></a>`)
             .join('');
           return fill(partial('project'), {
@@ -1041,7 +1250,7 @@ async function main() {
 
     // Educación + certificaciones.
     const showEdu = cfg.secciones?.educacion !== false && k.educacion.length;
-    const showCerts = cfg.secciones?.certificaciones !== false && cv.certifications.length;
+    const showCerts = k.certificaciones.length > 0;
     let education = '';
     if (showEdu || showCerts) {
       const edu = showEdu
@@ -1053,7 +1262,7 @@ async function main() {
           .join('')}</ul>`
         : '';
       const certs = showCerts
-        ? `<h3 class="subhead">${esc(t.certifications)}</h3><ul class="certs">${cv.certifications.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
+        ? `<h3 class="subhead">${esc(t.certifications)}</h3><ul class="certs">${k.certificaciones.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
         : '';
       education = section('education', 5, t.cmd.education, showEdu ? t.nav.education : t.certifications, edu + certs);
     }
@@ -1102,7 +1311,7 @@ async function main() {
 
     // Head / SEO.
     const description = truncate(plain(k.sobre_mi) || k.titular || fullName, 158);
-    const title = k.titular ? `${fullName} — ${k.titular}` : fullName;
+    const title = k.titular ? `${fullName} | ${noDash(k.titular)}` : fullName;
     const alternates = [
       ...idiomas.map((l) => `<link rel="alternate" hreflang="${l}" href="${pageUrl(l)}">`),
       `<link rel="alternate" hreflang="x-default" href="${pageUrl(idiomas[0])}">`,
@@ -1113,7 +1322,7 @@ async function main() {
       '@context': 'https://schema.org',
       '@type': 'Person',
       name: fullName,
-      ...(k.titular ? { jobTitle: k.titular } : {}),
+      ...(str(c.title) ? { jobTitle: str(c.title) } : {}),
       url: pageUrl(lang),
       ...(photoRel ? { image: `${baseUrl}${photoRel}` } : og ? { image: ogImage } : {}),
       ...(sameAs.length ? { sameAs } : {}),
@@ -1211,7 +1420,7 @@ async function main() {
       LANG: lang,
       THEME: themeName,
       MODE_ATTR: modoInicial === 'auto' ? '' : ` data-mode="${modoInicial}"`,
-      TITLE: esc(`${t.not_found_title} — ${fullName}`),
+      TITLE: esc(`${t.not_found_title} | ${fullName}`),
       CSS: css,
       ACCENT_CSS: accentStyle,
       MODE_SCRIPT: modeScript(modoInicial),
@@ -1289,13 +1498,19 @@ async function main() {
     contacto.includes('ubicacion') ? loc : '',
   ].join('\n');
   const rules = privacyRules({ profile, cfg, contacto, root, cvText, allowedText });
+  // El CV en PDF sale de cv.md: lo que ya está en cv.md (ej. la ubicación del encabezado) no es filtración.
+  const pdfRules = pdfHtml.size ? privacyRules({ profile, cfg, contacto, root, cvText, allowedText: `${allowedText}\n${cvText}` }) : [];
   const ogTexts = new Map(Object.entries(ogFiles).map(([l, h]) => [`og (${l})`, { data: h }]));
-  const leaks = [...checkPrivacy(files, rules), ...checkPrivacy(ogTexts, rules)];
+  const leaks = [...checkPrivacy(files, rules), ...checkPrivacy(ogTexts, rules), ...checkPrivacy(pdfHtml, pdfRules)];
   if (leaks.length) {
     if (browserP) await (await browserP).close();
     die(`revisión de privacidad: el sitio publicaría datos privados. No escribí nada.\n${leaks.map((l) => `  - ${l}`).join('\n')}\n` +
-      'Sacalos de portafolio.yml / cv.md (o de la whitelist `contacto`) y volvé a correr.');
+      'Sacalos de portafolio.yml / cv.md (o de la whitelist `contacto`) y volvé a correr.' +
+      (pdfHtml.size ? ' Si el dato está en el CV en PDF, regeneralo sin él o poné cv_pdf: null.' : ''));
   }
+
+  // CV en PDF sin teléfono (Playwright, recién después de la revisión de privacidad).
+  for (const p of Object.values(pdfs)) if (p.sinTelefono) put(p.file, await renderPdf(p.html, p.htmlPath, p.size, root), true);
 
   // OG (Playwright).
   if (og) {
@@ -1329,8 +1544,19 @@ async function main() {
   if (empresas.length) publico.push({ dato: 'empresas', valor: empresas });
   if (showEduAny(cfg, cv)) publico.push({ dato: 'educacion', valor: [...new Set(cv.education.map((e) => e.institucion || e.titulo).filter(Boolean))] });
   if (photoRel) publico.push({ dato: 'foto', valor: `${photoRel} (re-encodeada, sin EXIF/GPS)` });
-  for (const [l, p] of Object.entries(pdfs))
-    publico.push({ dato: `cv_pdf (${l})`, valor: `${p.file} ← ${p.source}`, nota: 'el PDF es el CV entero: lleva todo lo que tenga su header (teléfono, email, ubicación) aunque no esté en `contacto`' });
+  for (const [l, p] of Object.entries(pdfs)) {
+    const lleva = p.html ? pdfContactData(p.html, profile, !p.sinTelefono) : null;
+    publico.push({
+      dato: `cv_pdf (${l})`,
+      valor: `${p.file} ← ${p.source}`,
+      ...(lleva ? { contacto: lleva } : {}),
+      nota: p.sinTelefono
+        ? `re-generado desde ${relative(root, p.htmlPath)} sin el teléfono; el resto del CV va entero`
+        : contacto.includes('telefono')
+          ? 'copiado tal cual: el PDF es el CV entero, con el teléfono (está en `contacto`)'
+          : 'copiado tal cual: el PDF es el CV entero, revisá su encabezado',
+    });
+  }
   const recsAll = cfg.secciones?.recomendaciones || [];
   if (recsAll.length) publico.push({ dato: 'recomendaciones', valor: recsAll.map((r) => `${str(r.autor)}${r.rol ? ` (${str(r.rol)})` : ''}`) });
 

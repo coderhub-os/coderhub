@@ -51,6 +51,11 @@ url: null
 # narrative.headline de config/profile.yml.
 titular: "Backend engineer building payment APIs with Node.js"
 
+# Línea chica arriba del nombre (hero y tarjeta OG). Opcional: si falta, usa
+# los 3 primeros nombres de `stack` ("Node.js · TypeScript · PostgreSQL").
+# Si la ponés, va en la traducción (es.eyebrow).
+eyebrow: null
+
 # Foto (opcional): ruta a un .jpg, .jpeg, .png o .webp. El build la recorta
 # cuadrada y la re-encodea (sin EXIF ni GPS). Sin foto, se muestran las
 # iniciales. NO uses candidate.photo de profile.yml: ese campo es del CV PDF.
@@ -65,8 +70,11 @@ sobre_mi: |
 
   Second paragraph with a concrete, real outcome from cv.md.
 
-# Proyectos (solo cards). Links solo https:// y solo reales (gh repo list,
-# cv.md, profile.yml o lo que pase el cliente). Si no hay link, se omite.
+# Proyectos (solo cards). Links solo reales (gh repo list, cv.md, profile.yml
+# o lo que pase el cliente); si no hay link, se omite. Tipos de link:
+#   repo  → "Código"         (https://)
+#   demo  → "Demo"           (https://)
+#   docs  → "Documentación"  (https:// o http://; EN: "Docs")
 proyectos:
   - nombre: "project-name"
     descripcion: "What it solves and the outcome, in one or two lines."
@@ -74,6 +82,7 @@ proyectos:
     links:
       repo: "https://github.com/usuario/project-name"
       demo: null
+      docs: null
 
 # Stack destacado, con logo de Simple Icons (https://simpleicons.org).
 # slug "" (o un slug que no existe) → sale como chip de texto.
@@ -106,6 +115,10 @@ contacto: [email, linkedin, github]
 # PDF del CV base por idioma (nunca uno adaptado a una oferta). Se publica
 # como cv-{nombre}-{idioma}.pdf. Sin PDF: cv_pdf: null (no hay botón).
 # Si un idioma no tiene PDF, su página ofrece el del otro idioma.
+# Si `telefono` NO está en `contacto`, el build no copia el PDF: lo vuelve a
+# generar sin el teléfono desde el HTML que el motor deja al lado
+# (output/cv-nombre-general.html para output/cv-nombre-general.pdf). Si ese
+# HTML no está, el build falla: regenerá el CV o poné cv_pdf: null.
 cv_pdf:
   en: output/cv-nombre-general.pdf
   es: output/cv-nombre-general-es.pdf
@@ -118,6 +131,7 @@ cv_pdf:
 # inglés actual, el build avisa que la traducción quedó vieja.
 # es:
 #   titular: "..."
+#   eyebrow: "..."          # solo si `eyebrow` está puesto arriba
 #   sobre_mi: |
 #     ...
 #   proyectos:
@@ -131,4 +145,6 @@ cv_pdf:
 #   habilidades:            # opcional: grupos de ## Skills
 #     - grupo: "..."
 #       items: "..."
+#   certificaciones:        # opcional: una por certificación de cv.md, mismo orden
+#     - "..."
 #   fuente: "hash-del-dump"

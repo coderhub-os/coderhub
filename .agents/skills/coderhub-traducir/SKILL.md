@@ -98,17 +98,25 @@ El portafolio en español no sale del CV ni del LinkedIn traducidos: se traduce 
    node .agents/skills/coderhub-portafolio/build.mjs --dump-content
    ```
 
-   Imprime un JSON con el contenido EN (titular, sobre mí, proyectos, experiencia, educación) y su hash. Si falla porque no hay `config/portafolio.yml`: *"Todavía no armamos tu portafolio. Arrancá con `/coderhub portafolio` y después lo traducimos."* y pará. Si falla por otra validación, mostrale el mensaje y pará.
+   Imprime un JSON con el contenido EN (titular, eyebrow, sobre mí, proyectos, experiencia, educación, certificaciones, habilidades) y su hash. Si falla porque no hay `config/portafolio.yml`: *"Todavía no armamos tu portafolio. Arrancá con `/coderhub portafolio` y después lo traducimos."* y pará. Si falla por otra validación, mostrale el mensaje y pará.
 2. **Traducí** con las "Reglas de traducción" de arriba (cero datos nuevos, keywords y roles en inglés, mismos números, nombres propios intactos). El portafolio es una página personal: primera persona, español neutro, sin voseo.
-3. **Armá el bloque `es:`** de `config/portafolio.yml`:
-   - `titular`, `sobre_mi` (mismos párrafos; `**negrita**` y `[texto](url)` quedan en el mismo lugar, solo cambia el texto).
-   - `proyectos: [{descripcion}]` y `experiencia: [{rol, bullets: []}]` en el **mismo orden y cantidad** que el dump (el generador los empareja por posición). Mismos bullets por rol.
-   - `educacion`, en el mismo orden que el dump.
+3. **Armá el bloque `es:`** de `config/portafolio.yml`. Todos los campos que puede llevar (los que no estén en el dump, se omiten):
+   - `titular`: el titular del hero.
+   - `eyebrow`: la línea chica arriba del nombre. Aparece en el dump **solo si** `portafolio.yml` tiene `eyebrow:` (el default, los 3 primeros de `stack`, no se traduce y no va en el bloque). Los nombres de tecnologías quedan **igual que en inglés**; solo se traducen las palabras que no lo son (ej. "Payments" → "Pagos").
+   - `sobre_mi`: mismos párrafos; `**negrita**` y `[texto](url)` quedan en el mismo lugar, solo cambia el texto.
+   - `proyectos: [{descripcion}]`: solo la descripción; el nombre del proyecto y su stack no se traducen.
+   - `experiencia: [{rol, bullets: []}]`: mismos bullets por rol. El `rol` queda en inglés si es un título que el mercado usa así (`Backend Engineer`, `Tech Lead`).
+   - `educacion: [{titulo, detalle}]`: los **títulos de grado se traducen** ("B.Sc. in Computer Science" → "Licenciatura en Ciencias de la Computación"); el nombre de la universidad queda intacto.
+   - `certificaciones`: una lista, en el **mismo orden** que las de `## Certifications` de `cv.md` (y que el dump). El nombre oficial de la certificación queda en inglés (`AWS Certified Solutions Architect`); solo se traduce lo descriptivo que la acompañe.
+   - `habilidades: [{grupo, items}]`: se traduce el nombre del grupo ("Languages" → "Lenguajes", "Spoken languages" → "Idiomas"). En `items`, los **nombres de tecnologías quedan en inglés** (`Go`, `Kubernetes`, `PostgreSQL`); los **idiomas hablados se traducen** ("English (C1), Spanish (native)" → "Inglés (C1), Español (nativo)").
    - `fuente`: el hash que imprime el dump, tal cual. Si después cambia el contenido en inglés, el build avisa que la traducción quedó vieja.
+
+   Las listas (`proyectos`, `experiencia`, `educacion`, `certificaciones`, `habilidades`) van en el **mismo orden y cantidad** que el dump: el generador las empareja por posición.
 
    Si ya había un bloque `es:`, actualizalo en el lugar; el resto del archivo no se toca.
 4. **Mostrale el diff** del bloque `es:` (lo nuevo contra lo que había, o el bloque entero si es la primera vez) y escribilo **solo con su OK**.
-5. **Números a mano:** el fact gate no corre sobre el portafolio y en español tampoco chequearía conteos. Comparale cada número del bloque `es:` contra el dump en inglés (años, porcentajes, cantidades) y decile que lo revise él también.
+5. **Fact gate manual de números (ES vs EN):** el fact gate no corre sobre el portafolio y en español tampoco chequearía conteos. Comparale cada número del bloque `es:` contra el dump en inglés (años, porcentajes, cantidades, montos) campo por campo, mostrale la tabla EN → ES y decile que lo revise él también. Si un número no coincide, se corrige en el bloque `es:` antes de escribirlo.
+   **Recalculá `fuente`:** si para arreglar algo cambiaste el contenido en inglés (`cv.md` o `config/portafolio.yml`), volvé a correr `build.mjs --dump-content`, revisá que la traducción siga cubriendo todo y poné el hash **nuevo** en `fuente`. Un `fuente` viejo hace que el build avise que la traducción quedó vieja.
 6. Si `es` no está en `idiomas:` de `config/portafolio.yml`, avisale que la traducción no se publica hasta sumarlo. Para regenerar el sitio: `/coderhub portafolio`.
 
 ## Reglas
