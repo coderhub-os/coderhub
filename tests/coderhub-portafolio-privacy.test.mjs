@@ -223,6 +223,23 @@ if (!existsSync(BUILD)) {
       const wrong = cases.filter(([t, want]) => isLocationBullet(t, 'Córdoba') !== want);
       if (wrong.length) fail(`isLocationBullet misclassifies: ${wrong.map(([t]) => t).join(' | ')}`);
       else pass('isLocationBullet tells place-only bullets from achievements');
+
+      // Pilot findings: visible job search, literal " -- ", demo→docs, stale portfolio URL in the CV base.
+      const { jobSearchPhrases, hasLiteralDoubleDash, isDocsUrl, stalePortfolioUrl } = await import(pathToFileURL(BUILD).href);
+      const det = [
+        ['jobSearchPhrases flags seeking/open to/buscando',
+          JSON.stringify(jobSearchPhrases('Engineer seeking remote roles. Open to relocation. Buscando nuevos desafíos')) === '["seeking","open to","buscando"]'
+          && jobSearchPhrases('Led the migration of 14 services').length === 0],
+        ['hasLiteralDoubleDash flags " -- " only', hasLiteralDoubleDash('Built X -- cut costs') && !hasLiteralDoubleDash('run with --no-og') && !hasLiteralDoubleDash('a - b')],
+        ['isDocsUrl tells docs from demos', ['https://docs.foo.dev', 'https://foo.dev/docs/intro', 'https://foo.dev/documentation'].every(isDocsUrl)
+          && !['https://foo.dev', 'https://foo.dev/dockerfile', 'https://github.com/a/docs-site'].some(isDocsUrl)],
+        ['stalePortfolioUrl flags an old or missing site URL in the CV base',
+          stalePortfolioUrl('<a href="https://old.vercel.app">old</a>', 'https://old.vercel.app', 'https://martin.github.io/')?.kind === 'distinta'
+          && stalePortfolioUrl('<p>x</p>', 'https://martin.github.io', 'https://martin.github.io/')?.kind === 'falta'
+          && stalePortfolioUrl('<a href="https://martin.github.io/">', 'https://martin.github.io', 'https://martin.github.io/') === null
+          && stalePortfolioUrl('<p>x</p>', '', 'https://martin.github.io/') === null],
+      ];
+      for (const [name, ok] of det) (ok ? pass : fail)(name);
     }
   } finally {
     rmSync(out, { recursive: true, force: true });

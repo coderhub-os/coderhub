@@ -130,6 +130,10 @@ Escribe `output/portafolio/` y al final imprime un JSON resumen: páginas, archi
 - **Notas pendientes en `cv.md`** ("pending", "TODO", "exact list pending...", etc.).
 - **Bullets que son solo una ubicación** (ej. un bullet que dice "Buenos Aires, Argentina").
 - **Texto en español en el contenido EN.**
+- **Búsqueda de trabajo visible** ("seeking", "open to", "looking for", "buscando", "disponible para"...), en el sitio o en el texto del PDF que se publica. Va a la revisión de privacidad (Step 6).
+- **Un ` -- ` literal** (de `cv.md` o del YAML): en el sitio se ve tal cual. Proponé reescribir la frase en `cv.md` (coma, dos puntos o punto) y aplicalo solo con su OK. **Nunca lo cambies por un guión largo**: `voice-dna` los prohíbe.
+- **`links.demo` que apunta a documentación** (`/docs`, `docs.`, `/documentation`): pasalo a `links.docs`.
+- **El CV base lleva otra URL de portafolio** (o no lleva la del sitio): el PDF publicado saldría con la URL vieja. Se resuelve en el Step 7 ("Antes del primer push").
 
 Mostrale **cada warning** al cliente, tal cual, y proponé el arreglo:
 
@@ -165,6 +169,8 @@ Antes de publicar, mostrale al cliente **todo lo que queda público**, desde la 
 - Empresas que aparecen (las de su experiencia).
 - El PDF que se publica y **qué datos lleva**: el PDF es el CV entero, así que trae lo que tenga su header (email, LinkedIn, GitHub, ubicación, URL) y toda la experiencia. Lo único que el build saca solo es el **teléfono** (si `telefono` no está en `contacto`, lo re-renderiza sin él). Listale los datos de contacto que efectivamente quedan en el PDF publicado (el resumen los trae en `publico[] → cv_pdf ({idioma}) → contacto`; si no, leelos del header del HTML hermano en `output/`) y marcá si alguno no está en `contacto` (ej. la ubicación). Si trae algo que no quiere publicar, o regenera el PDF base sin eso, o va `cv_pdf: null`.
 
+- **Búsqueda de trabajo visible**, aunque no haya `## Stealth`: marcá cada frase tipo "seeking", "open to", "looking for", "buscando", "disponible para" que quede en el sitio **o en el PDF publicado** (el build las lista en `warnings`; igual revisá el texto vos). Preguntale si quiere que eso sea público: si no, ajustá el texto del sitio en `portafolio.yml` / `cv.md` (con su OK) y, si está en el PDF, regenerá el CV base sin esa frase o va `cv_pdf: null`.
+
 Pedile confirmación explícita: *"Esto es todo lo que va a quedar público. ¿Lo publicamos así?"*. Sin un sí, no se publica.
 
 **Nunca se publica** (el build falla si lo detecta; nunca lo saltees ni lo "arregles" editando el output):
@@ -180,6 +186,14 @@ Pedile confirmación explícita: *"Esto es todo lo que va a quedar público. ¿L
 
 Confirmá antes de cada acción que crea o cambia algo en su cuenta (crear el repo, pushear, habilitar Pages, deployar). Todo con **su** cuenta: nunca en la org `coderhub-os` ni en la de su empresa.
 
+### Antes del primer push: la URL en el CV
+
+El PDF que se publica sale del CV base, así que tiene que llevar **la URL del sitio** (la `url` del resumen del build) desde la primera publicación:
+
+1. Si `config/profile.yml → candidate.portfolio_url` no es esa URL, mostrale el valor viejo y el nuevo, y con su OK escribila (cambiá solo esa línea). Así los CVs y las postulaciones la usan.
+2. Si el build avisa que el CV base lleva otra URL de portafolio (o no lleva la del sitio), avisale y ofrecé regenerar el CV base con el flujo del PDF del CV (`modes/pdf.md`, el mismo de siempre) y volver a correr el build (Step 4). Recién con el warning resuelto (o con su OK explícito para publicar así) seguí al push.
+3. Si después cambia la URL (Vercel devolvió otra, dominio propio), repetí estos dos pasos antes de volver a pushear.
+
 ### GitHub Pages
 
 1. **Cuenta:** `gh auth status` y `gh api user --jq .login`. Tiene que ser `{ghuser}`. Si no está logueado, él corre `gh auth login`; si está en otra cuenta, `gh auth switch`. No sigas hasta que coincida.
@@ -193,6 +207,12 @@ Confirmá antes de cada acción que crea o cambia algo en su cuenta (crear el re
    git checkout -B main
    git add -A && git commit -m "Publish portfolio"
    git push -u origin main
+   ```
+
+   Si `rsync` no está o el entorno lo bloquea, reemplazá esa línea por esta (también borra lo viejo, menos `.git`):
+
+   ```bash
+   git -C /tmp/coderhub-portafolio-publish/{repo} rm -rq --ignore-unmatch . && cp -R output/portafolio/. /tmp/coderhub-portafolio-publish/{repo}/
    ```
 
    (Si el clone de un repo vacío avisa "empty repository", es normal.) El repo público queda solo con el sitio generado: sin YAML, sin `cv.md`, sin datos crudos.
@@ -220,7 +240,9 @@ Confirmá antes de cada acción que crea o cambia algo en su cuenta (crear el re
 
 ### Cerrar
 
-Devolvé la URL final. Con el OK del cliente, escribila en `config/profile.yml → candidate.portfolio_url` (mostrale el valor viejo si había uno, y cambiá solo esa línea): así los CVs y las postulaciones la usan.
+Chequeá que el sitio responda: `curl -sI {url}`. Si `curl` está bloqueado en tu entorno, usá `node -e "fetch('{url}').then(r => console.log(r.status))"` (y lo mismo con `{url}cv-{nombre}-{idioma}.pdf`). Un 404 los primeros minutos es normal (ver Troubleshooting).
+
+Devolvé la URL final. `candidate.portfolio_url` ya quedó escrita antes del push ("Antes del primer push"); si la URL final terminó siendo otra, volvé a ese paso, regenerá y republicá.
 
 ## Step 8 — Actualizar ("actualizá mi portafolio")
 
@@ -234,6 +256,8 @@ Devolvé la URL final. Con el OK del cliente, escribila en `config/profile.yml �
    rsync -a --delete --exclude .git output/portafolio/ /tmp/coderhub-portafolio-publish/{repo}/
    cd /tmp/coderhub-portafolio-publish/{repo} && git add -A && git diff --cached --stat
    ```
+
+   Sin `rsync` (no está o el entorno lo bloquea), en vez de esa línea: `git -C /tmp/coderhub-portafolio-publish/{repo} rm -rq --ignore-unmatch . && cp -R output/portafolio/. /tmp/coderhub-portafolio-publish/{repo}/` (borra lo viejo igual que `--delete`). Para chequear lo publicado en vivo sin `curl`: `node -e "fetch('{url}').then(r => console.log(r.status))"`.
 
    Mostrale el resumen y confirmá. Con su OK: `git commit -m "Update portfolio" && git push`. En Vercel conectado al repo, el push deploya; si no, `vercel deploy --prod --yes`.
 

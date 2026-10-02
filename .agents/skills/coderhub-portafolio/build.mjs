@@ -472,6 +472,8 @@ function validate(cfg, profile, root, themeOverride, errors, warnings) {
         else if (k === 'docs') {
           if (v && !/^https?:\/\/[^\s/]+\.[^\s]+$/i.test(str(v))) errors.push(`${where}: links.docs "${v}" tiene que ser una URL http:// o https://`);
         } else if (v && !isHttps(str(v))) errors.push(`${where}: links.${k} "${v}" tiene que ser una URL https:// (http:// es contenido mixto)`);
+        else if (k === 'demo' && v && isDocsUrl(v))
+          warnings.push(`${where}: links.demo "${v}" parece documentación, no una demo: pasalo a links.docs (el botón dice "Docs" / "Documentación")`);
       }
     });
 
@@ -582,6 +584,62 @@ function contentWarnings(en, warnings) {
     if (hits >= 2 || (f.kind === 'role' && /[ñáéíóú]/i.test(f.text)))
       warnings.push(`${f.where} parece estar en español y es contenido EN: "${truncate(f.text, 90)}". El contenido base va en inglés; el español va en el bloque \`es:\``);
   }
+}
+
+// Frases que hacen pública la búsqueda de trabajo (aunque no haya `## Stealth`).
+const JOB_SEARCH_RX = new RegExp(
+  [
+    '\\bseeking\\b',
+    '\\bopen to\\b',
+    '#?\\bopentowork\\b',
+    '\\blooking for\\b',
+    '\\bactively looking\\b',
+    '\\bavailable for (?:hire|work|new|opportunit)',
+    '\\bbuscando\\b',
+    '\\bdisponible para\\b',
+    '\\ben b[uú]squeda\\b',
+    '\\babiert[oa] a (?:nuevas?|oportunidades|propuestas|ofertas|trabajo)',
+  ].join('|'),
+  'gi',
+);
+
+/** Frases de búsqueda de trabajo en un texto (sin repetir, en minúscula). */
+export function jobSearchPhrases(text) {
+  return [...new Set([...str(text).matchAll(JOB_SEARCH_RX)].map((m) => m[0].toLowerCase()))];
+}
+
+/** " -- " literal (de cv.md): en el sitio se ve tal cual. */
+export const hasLiteralDoubleDash = (text) => /(?:^|\s)--(?:\s|$)/.test(str(text));
+
+/** URL de documentación (/docs, docs., /documentation): va en links.docs, no en links.demo. */
+export function isDocsUrl(u) {
+  const s = str(u).toLowerCase();
+  return /^https?:\/\/docs\./.test(s) || /^https?:\/\/[^/]+\/(?:[^?#]*\/)?(?:docs?|documentation)(?:[/?#]|$)/.test(s);
+}
+
+/** Texto visible de un HTML (sin comentarios, style ni script). */
+const htmlText = (html) =>
+  str(html)
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<(style|script)\b[\s\S]*?<\/\1>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&nbsp;/g, ' ');
+
+/**
+ * ¿El HTML del CV (el que va al PDF) lleva una URL de portafolio vieja?
+ * → { kind: 'distinta', url } si trae portfolio_url y no es la URL del sitio;
+ *   { kind: 'falta' } si portfolio_url ya es la del sitio pero el HTML no la trae (quedó viejo);
+ *   null si está bien o no hay portfolio_url.
+ */
+export function stalePortfolioUrl(html, portfolioUrl, baseUrl) {
+  const norm = (u) => str(u).toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+  const raw = str(html).replace(/<!--[\s\S]*?-->/g, '').toLowerCase();
+  const p = norm(portfolioUrl);
+  const base = norm(baseUrl);
+  if (!p || !base) return null;
+  if (p !== base) return raw.includes(p) ? { kind: 'distinta', url: str(portfolioUrl) } : null;
+  return raw.includes(base) ? null : { kind: 'falta' };
 }
 
 /** Aplica el bloque de traducción (por posición) sobre el contenido EN. */
@@ -1099,6 +1157,35 @@ async function main() {
     const html = stripPhone(readFileSync(sibling, 'utf8'), c.phone);
     pdfHtml.set(`${name} (desde ${relative(root, sibling)})`, { data: html });
     pdfs[lang] = { file: name, source: str(rel), html, htmlPath: sibling, size: pdfPageSize(original), sinTelefono: true };
+  }
+
+  // URL de portafolio del CV base: el PDF publicado tiene que llevar la del sitio.
+  for (const [lang, p] of Object.entries(pdfs)) {
+    if (!p.html) continue;
+    const stale = stalePortfolioUrl(p.html, c.portfolio_url, baseUrl);
+    if (stale?.kind === 'distinta')
+      warnings.push(`cv_pdf.${lang}: el CV base lleva la URL de portafolio ${stale.url} y el sitio va a estar en ${baseUrl}. Con OK del cliente, poné candidate.portfolio_url: ${baseUrl} en profile.yml, regenerá el CV base (modo pdf) y volvé a correr el build antes de publicar`);
+    else if (stale?.kind === 'falta')
+      warnings.push(`cv_pdf.${lang}: candidate.portfolio_url ya es ${baseUrl} pero el CV base no la lleva (quedó viejo). Regenerá el CV base (modo pdf) y volvé a correr el build antes de publicar`);
+  }
+
+  // Búsqueda de trabajo visible y " -- " literal en lo publicado.
+  const seenDash = new Set();
+  for (const lang of idiomas) {
+    for (const f of publishedFields(byLang[lang])) {
+      const hits = jobSearchPhrases(f.text);
+      if (hits.length)
+        warnings.push(`${lang}: ${f.where} deja pública la búsqueda de trabajo (${hits.map((h) => `"${h}"`).join(', ')}): "${truncate(f.text, 90)}". Preguntale al cliente si lo quiere público (Step 6)`);
+      if (hasLiteralDoubleDash(f.text) && !seenDash.has(f.text)) {
+        seenDash.add(f.text);
+        warnings.push(`${lang}: ${f.where} tiene un " -- " literal que se ve tal cual en el sitio: "${truncate(f.text, 90)}". Con OK del cliente, reescribilo en cv.md / portafolio.yml (coma, dos puntos o punto; sin guión largo)`);
+      }
+    }
+  }
+  for (const [lang, p] of Object.entries(pdfs)) {
+    const hits = p.html ? jobSearchPhrases(htmlText(p.html)) : [];
+    if (hits.length)
+      warnings.push(`cv_pdf.${lang}: el PDF publicado deja pública la búsqueda de trabajo (${hits.map((h) => `"${h}"`).join(', ')}). Preguntale al cliente si lo quiere público (Step 6)`);
   }
 
   // Links de contacto (whitelist).
