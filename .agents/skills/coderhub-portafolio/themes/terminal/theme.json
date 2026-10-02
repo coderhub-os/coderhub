@@ -1,0 +1,6 @@
+{
+  "name": "terminal",
+  "label": "Terminal",
+  "bg": { "light": "#FDF6E3", "dark": "#0A0D0B" },
+  "og_mode": "dark"
+}

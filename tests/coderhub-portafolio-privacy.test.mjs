@@ -17,6 +17,7 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, statSync } from 'fs
 import { tmpdir } from 'os';
 import { dirname, join, relative, resolve, sep } from 'path';
 import * as yaml from 'js-yaml';
+import { isNestedCheckout } from '../lib/mjs-files.mjs';
 import { pass, fail, run, lastRunFailure, rmSync, ROOT, NODE } from './helpers.mjs';
 
 console.log('\nCoderHub OS portafolio: privacy + links (coderhub-portafolio)');
@@ -28,7 +29,8 @@ const BINARY = /\.(png|jpe?g|gif|webp|avif|ico|pdf|woff2?|ttf|otf)$/i;
 
 const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
   const child = join(dir, e.name);
-  return e.isDirectory() ? walk(child) : [child];
+  if (!e.isDirectory()) return [child];
+  return isNestedCheckout(child) ? [] : walk(child);
 });
 
 /** Every scalar leaf of a YAML value, as strings. */

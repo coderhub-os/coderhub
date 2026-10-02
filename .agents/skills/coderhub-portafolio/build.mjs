@@ -600,6 +600,7 @@ function accentCss(accent, theme) {
   const light = inkFor(accent, theme.bg.light);
   const dark = inkFor(accent, theme.bg.dark);
   return `:root{--accent:${accent};--on-accent:${onAccent(accent)};--accent-ink:${light}}` +
+    `@media (prefers-color-scheme: dark){:root:not([data-mode]){--accent-ink:${dark}}}` +
     `:root[data-mode="dark"]{--accent-ink:${dark}}`;
 }
 
@@ -984,7 +985,7 @@ async function main() {
     };
 
     const about = k.sobre_mi
-      ? section('about', 1, 'cat sobre-mi.md', t.nav.about, `<div class="prose">${paragraphs(k.sobre_mi).map((p) => `<p>${inline(p)}</p>`).join('\n')}</div>`)
+      ? section('about', 1, t.cmd.about, t.nav.about, `<div class="prose">${paragraphs(k.sobre_mi).map((p) => `<p>${inline(p)}</p>`).join('\n')}</div>`)
       : '';
 
     // Experiencia (agrupada por empresa).
@@ -1009,11 +1010,11 @@ async function main() {
         }, 'experience-item');
       })
       .join('\n');
-    const experience = cv.experience.length ? section('experience', 2, 'ls experiencia/', t.nav.experience, `<div class="xp">${xpItems}</div>`) : '';
+    const experience = cv.experience.length ? section('experience', 2, t.cmd.experience, t.nav.experience, `<div class="xp">${xpItems}</div>`) : '';
 
     // Proyectos.
     const projects = k.proyectos.length
-      ? section('projects', 3, 'ls proyectos/', t.nav.projects, `<ul class="projects">${k.proyectos
+      ? section('projects', 3, t.cmd.projects, t.nav.projects, `<ul class="projects">${k.proyectos
         .map((p, i) => {
           const src = cfg.proyectos[i];
           const plinks = Object.entries(src.links || {})
@@ -1035,7 +1036,7 @@ async function main() {
       ? `<dl class="skills">${k.habilidades.map((g) => `<div class="skills__group">${g.grupo ? `<dt>${esc(g.grupo)}</dt>` : ''}<dd>${esc(g.items)}</dd></div>`).join('')}</dl>`
       : '';
     const stack = stackCfg.length || groups
-      ? section('stack', 4, 'cat stack.txt', t.nav.stack, `${stackCfg.length ? `<ul class="stack">${logosHtml()}</ul>` : ''}${groups}`)
+      ? section('stack', 4, t.cmd.stack, t.nav.stack, `${stackCfg.length ? `<ul class="stack">${logosHtml()}</ul>` : ''}${groups}`)
       : '';
 
     // Educación + certificaciones.
@@ -1054,13 +1055,13 @@ async function main() {
       const certs = showCerts
         ? `<h3 class="subhead">${esc(t.certifications)}</h3><ul class="certs">${cv.certifications.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
         : '';
-      education = section('education', 5, 'cat formacion.md', showEdu ? t.nav.education : t.certifications, edu + certs);
+      education = section('education', 5, t.cmd.education, showEdu ? t.nav.education : t.certifications, edu + certs);
     }
 
     // Recomendaciones.
     const recs = cfg.secciones?.recomendaciones || [];
     const recommendations = recs.length
-      ? section('recommendations', 6, 'grep -r "recomienda"', t.nav.recommendations, `<div class="quotes">${recs
+      ? section('recommendations', 6, t.cmd.recommendations, t.nav.recommendations, `<div class="quotes">${recs
         .map((r) => fill(partial('recommendation'), { TEXT: inline(str(r.texto)), AUTHOR: esc(str(r.autor)), ROLE: esc(str(r.rol)) }, 'recommendation'))
         .join('\n')}</div>`)
       : '';
@@ -1073,7 +1074,7 @@ async function main() {
       LINKS: links.filter((l) => l.k !== 'email').length ? `<ul class="links links--contact">${linksHtml}</ul>` : '',
       CV_BUTTON: cvButton,
     }, 'contact');
-    const contact = links.length || cvButton ? section('contact', 7, 'contact --open', t.nav.contact, contactBody, ' section--contact') : '';
+    const contact = links.length || cvButton ? section('contact', 7, t.cmd.contact, t.nav.contact, contactBody, ' section--contact') : '';
 
     // Header: nav + idiomas + toggle.
     const langLinks = idiomas

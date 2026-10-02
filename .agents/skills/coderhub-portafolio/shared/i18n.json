@@ -17,7 +17,10 @@
     },
     "present": "actualidad",
     "download_cv": "Descargar CV",
-    "cv_lang": { "es": "(en español)", "en": "(en inglés)" },
+    "cv_lang": {
+      "es": "(en español)",
+      "en": "(en inglés)"
+    },
     "repo": "Código",
     "demo": "Demo",
     "certifications": "Certificaciones",
@@ -35,7 +38,16 @@
     "back_to_top": "Volver arriba",
     "not_found_title": "Página no encontrada",
     "not_found_text": "La página que buscás no existe o cambió de lugar.",
-    "not_found_home": "Ir al inicio"
+    "not_found_home": "Ir al inicio",
+    "cmd": {
+      "about": "cat sobre-mi.md",
+      "experience": "ls experiencia/",
+      "projects": "ls proyectos/",
+      "stack": "cat stack.txt",
+      "education": "cat formacion.md",
+      "recommendations": "grep -r \"recomienda\"",
+      "contact": "contacto --abrir"
+    }
   },
   "en": {
     "lang_name": "English",
@@ -55,7 +67,10 @@
     },
     "present": "Present",
     "download_cv": "Download CV",
-    "cv_lang": { "es": "(in Spanish)", "en": "(in English)" },
+    "cv_lang": {
+      "es": "(in Spanish)",
+      "en": "(in English)"
+    },
     "repo": "Code",
     "demo": "Demo",
     "certifications": "Certifications",
@@ -73,6 +88,15 @@
     "back_to_top": "Back to top",
     "not_found_title": "Page not found",
     "not_found_text": "The page you are looking for does not exist or has moved.",
-    "not_found_home": "Go to the home page"
+    "not_found_home": "Go to the home page",
+    "cmd": {
+      "about": "cat about.md",
+      "experience": "ls experience/",
+      "projects": "ls projects/",
+      "stack": "cat stack.txt",
+      "education": "cat education.md",
+      "recommendations": "grep -r \"recommends\"",
+      "contact": "contact --open"
+    }
   }
 }
