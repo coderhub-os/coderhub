@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --k: {{K}}; --mono: Menlo, "DejaVu Sans Mono", "Courier New", monospace; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: {{W}}px; height: {{H}}px; overflow: hidden; }
+  body {
+    background: #0B1220; color: #E8EEF6;
+    font-family: "Helvetica Neue", Arial, "Liberation Sans", sans-serif;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wrap { display: flex; flex-direction: column; align-items: center; gap: calc(20px * var(--k)); text-align: center; }
+  .eyebrow { font-family: var(--mono); font-size: calc(17px * var(--k)); font-weight: 600; color: #5B7A99; letter-spacing: calc(6px * var(--k)); }
+  .name { font-size: calc(70px * var(--k)); font-weight: 300; line-height: 1.05; }
+  .rule { width: calc(120px * var(--k)); height: calc(1.5px * var(--k)); background: #0099FF; }
+  .tagline { font-size: calc(24px * var(--k)); font-weight: 300; color: #8FA3B8; }
+  .logos { margin-top: calc(26px * var(--k)); display: flex; align-items: center; gap: calc(34px * var(--k)); }
+  .logo img { display: block; height: calc(32px * var(--k)); }
+  .chip { font-family: var(--mono); font-size: calc(17px * var(--k)); color: #8FA3B8; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">{{EYEBROW}}</div>
+    <div class="name">{{NAME}}</div>
+    <div class="rule"></div>
+    <div class="tagline">{{TAGLINE}}</div>
+    <div class="logos">{{LOGOS}}</div>
+  </div>
+</body>
+</html>

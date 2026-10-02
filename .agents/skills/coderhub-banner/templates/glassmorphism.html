@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --k: {{K}}; --mono: Menlo, "DejaVu Sans Mono", "Courier New", monospace; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: {{W}}px; height: {{H}}px; overflow: hidden; }
+  body {
+    position: relative; color: #E8EEF6;
+    background: linear-gradient(50deg, #0A1628, #12263f);
+    font-family: "Helvetica Neue", Arial, "Liberation Sans", sans-serif;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .blob { position: absolute; border-radius: 50%; }
+  .b1 { width: calc(340px * var(--k)); height: calc(340px * var(--k)); right: calc(80px * var(--k)); top: calc(40px * var(--k)); background: rgba(0, 153, 255, .18); }
+  .b2 { width: calc(260px * var(--k)); height: calc(260px * var(--k)); right: calc(420px * var(--k)); bottom: calc(-60px * var(--k)); background: rgba(39, 178, 255, .12); }
+  .card {
+    position: relative; width: calc(1230px * var(--k));
+    padding: calc(42px * var(--k)) calc(56px * var(--k));
+    border-radius: calc(30px * var(--k));
+    background: rgba(255, 255, 255, .08);
+    border: calc(1.2px * var(--k)) solid rgba(255, 255, 255, .22);
+    backdrop-filter: blur(calc(18px * var(--k)));
+    display: flex; flex-direction: column; gap: calc(15px * var(--k));
+  }
+  .eyebrow { font-family: var(--mono); font-size: calc(18px * var(--k)); font-weight: 700; color: #8FD3FF; letter-spacing: calc(5px * var(--k)); }
+  .name { font-size: calc(66px * var(--k)); font-weight: 800; line-height: 1.05; }
+  .tagline { font-size: calc(25px * var(--k)); color: #C7D6E8; }
+  .logos { margin-top: calc(20px * var(--k)); display: flex; align-items: center; gap: calc(30px * var(--k)); }
+  .logo img { display: block; height: calc(40px * var(--k)); }
+  .chip { font-family: var(--mono); font-size: calc(18px * var(--k)); color: #C7D6E8; padding: calc(6px * var(--k)) calc(12px * var(--k)); border: calc(1.2px * var(--k)) solid rgba(255, 255, 255, .3); border-radius: calc(10px * var(--k)); }
+</style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="card">
+    <div class="eyebrow">{{EYEBROW}}</div>
+    <div class="name">{{NAME}}</div>
+    <div class="tagline">{{TAGLINE}}</div>
+    <div class="logos">{{LOGOS}}</div>
+  </div>
+</body>
+</html>

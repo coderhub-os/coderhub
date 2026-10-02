@@ -23,6 +23,26 @@ license: MIT
 - Nunca digas ni escribas "career-ops" en el chat. Los nombres internos (rutas, scripts, variables `CAREER_OPS_*`) se usan igual, pero no se nombran.
 <!-- coderhub:end presentation -->
 
+<!-- coderhub:start modes -->
+**Capa CoderHub (modos propios).** Estos sub-comandos son de CoderHub y se resuelven antes que la tabla de Mode Routing. Son sub-comandos conocidos: nunca disparan el auto-pipeline. Se cargan como standalone: `modes/_profile.md` (si existe) + `modes/_custom.md` (si existe) + `modes/_coderhub.md` + el `SKILL.md` de la tabla (rutas contra `PROJECT_ROOT`). Seguí ese `SKILL.md`.
+
+| Sub-comando | `SKILL.md` |
+|---|---|
+| `linkedin` | `.agents/skills/coderhub-linkedin/SKILL.md` |
+| `readme-github` (o `readme`, `github`) | `.agents/skills/coderhub-readme-github/SKILL.md` |
+| `banner` | `.agents/skills/coderhub-banner/SKILL.md` |
+| `traducir` (o `traducir cv`, `traducir linkedin`) | `.agents/skills/coderhub-traducir/SKILL.md` |
+
+En el menú de Discovery Mode, sumá estas 4 líneas antes de la de `update`:
+
+```
+  /coderhub linkedin      → Optimizá tu perfil de LinkedIn para LinkedIn Recruiter
+  /coderhub readme-github → Armá el README de tu perfil de GitHub
+  /coderhub banner        → Generá los banners de LinkedIn y GitHub (3 estilos)
+  /coderhub traducir      → Pasá tu CV y tu LinkedIn al español
+```
+<!-- coderhub:end modes -->
+
 career-ops is a multi-CLI job-search command center. The routing below is shared across supported agent CLIs even when the invocation surface differs.
 
 ## Project Root Resolution

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --k: {{K}}; --mono: Menlo, "DejaVu Sans Mono", "Courier New", monospace; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: {{W}}px; height: {{H}}px; overflow: hidden; }
+  body {
+    position: relative; background: #EDE7D9; color: #151515;
+    font-family: "Helvetica Neue", Arial, "Liberation Sans", sans-serif;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wrap { display: flex; flex-direction: column; align-items: flex-start; gap: calc(18px * var(--k)); }
+  .eyebrow {
+    font-family: var(--mono); font-size: calc(17px * var(--k)); font-weight: 800; letter-spacing: calc(3px * var(--k));
+    background: #0099FF; color: #000; padding: calc(8px * var(--k)) calc(14px * var(--k));
+    border: calc(3px * var(--k)) solid #000;
+  }
+  .name { font-size: calc(78px * var(--k)); font-weight: 900; line-height: 1.02; }
+  .tagline { font-size: calc(23px * var(--k)); font-weight: 600; }
+  .logos { margin-top: calc(24px * var(--k)); display: flex; align-items: center; gap: calc(16px * var(--k)); }
+  .logo { display: flex; align-items: center; background: #fff; padding: calc(9px * var(--k)); border: calc(2.5px * var(--k)) solid #000; }
+  .logo img { display: block; height: calc(30px * var(--k)); }
+  .chip { font-family: var(--mono); font-size: calc(17px * var(--k)); font-weight: 800; height: calc(53px * var(--k)); padding: 0 calc(12px * var(--k)); }
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; height: calc(14px * var(--k)); background: #0099FF; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">{{EYEBROW}}</div>
+    <div class="name">{{NAME}}</div>
+    <div class="tagline">{{TAGLINE}}</div>
+    <div class="logos">{{LOGOS}}</div>
+  </div>
+  <div class="bar"></div>
+</body>
+</html>
