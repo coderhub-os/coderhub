@@ -1,0 +1,10 @@
+# El fixture se versiona aunque el .gitignore raíz ignore estos nombres (son
+# datos ficticios de prueba, no del cliente).
+!cv.md
+!config/profile.yml
+!data/applications.md
+!data/pipeline.md
+!reports/*.md
+!output/*.pdf
+# El sitio generado nunca se versiona.
+output/portafolio/

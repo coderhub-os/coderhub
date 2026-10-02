@@ -5,7 +5,7 @@
 // AGENTS.md blocks, the router's front matter and `modes` block, every file of
 // the .agents/skills/coderhub-* skills), the voice layer dropping out of
 // SYSTEM_PATHS, a coderhub-* skill dir not shipped by SYSTEM_PATHS (or claimed
-// by USER_PATHS) (A5), or the router `modes` block losing one of the 4 skills
+// by USER_PATHS) (A5), or the router `modes` block losing one of the 5 skills
 // or pointing at a SKILL.md that is missing or misnamed (D5b).
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join, relative } from 'path';
@@ -65,10 +65,10 @@ for (const dir of coderhubSkills) {
   else pass(`${dir} is shipped by SYSTEM_PATHS`);
 }
 
-// 3c. D5b — the router `modes` block maps the 4 coderhub skills to SKILL.md files that exist.
+// 3c. D5b — the router `modes` block maps the 5 coderhub skills to SKILL.md files that exist.
 const router = read('.agents/skills/career-ops/SKILL.md');
 const modes = block(router, 'modes');
-const MODE_SKILLS = ['coderhub-linkedin', 'coderhub-readme-github', 'coderhub-banner', 'coderhub-traducir'];
+const MODE_SKILLS = ['coderhub-linkedin', 'coderhub-readme-github', 'coderhub-banner', 'coderhub-traducir', 'coderhub-portafolio'];
 if (!modes) fail('router lost the coderhub modes block (D5b)');
 else {
   for (const name of MODE_SKILLS) {

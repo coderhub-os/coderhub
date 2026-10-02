@@ -1,0 +1,78 @@
+{
+  "es": {
+    "lang_name": "Español",
+    "og_locale": "es_AR",
+    "skip": "Saltar al contenido",
+    "nav_label": "Secciones",
+    "lang_label": "Idioma",
+    "toggle": "Modo oscuro",
+    "nav": {
+      "about": "Sobre mí",
+      "experience": "Experiencia",
+      "projects": "Proyectos",
+      "stack": "Stack",
+      "education": "Formación",
+      "recommendations": "Recomendaciones",
+      "contact": "Contacto"
+    },
+    "present": "actualidad",
+    "download_cv": "Descargar CV",
+    "cv_lang": { "es": "(en español)", "en": "(en inglés)" },
+    "repo": "Código",
+    "demo": "Demo",
+    "certifications": "Certificaciones",
+    "contact_lead": "¿Hablamos? Escribime por mail o por cualquiera de estos canales.",
+    "contact_lead_noemail": "¿Hablamos? Encontrame en cualquiera de estos canales.",
+    "contact": {
+      "email": "Email",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "twitter": "X",
+      "telefono": "Teléfono",
+      "ubicacion": "Ubicación"
+    },
+    "links": "Links",
+    "back_to_top": "Volver arriba",
+    "not_found_title": "Página no encontrada",
+    "not_found_text": "La página que buscás no existe o cambió de lugar.",
+    "not_found_home": "Ir al inicio"
+  },
+  "en": {
+    "lang_name": "English",
+    "og_locale": "en_US",
+    "skip": "Skip to content",
+    "nav_label": "Sections",
+    "lang_label": "Language",
+    "toggle": "Dark mode",
+    "nav": {
+      "about": "About",
+      "experience": "Experience",
+      "projects": "Projects",
+      "stack": "Stack",
+      "education": "Education",
+      "recommendations": "Recommendations",
+      "contact": "Contact"
+    },
+    "present": "Present",
+    "download_cv": "Download CV",
+    "cv_lang": { "es": "(in Spanish)", "en": "(in English)" },
+    "repo": "Code",
+    "demo": "Demo",
+    "certifications": "Certifications",
+    "contact_lead": "Let's talk. Email me or reach out on any of these channels.",
+    "contact_lead_noemail": "Let's talk. Find me on any of these channels.",
+    "contact": {
+      "email": "Email",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
+      "twitter": "X",
+      "telefono": "Phone",
+      "ubicacion": "Location"
+    },
+    "links": "Links",
+    "back_to_top": "Back to top",
+    "not_found_title": "Page not found",
+    "not_found_text": "The page you are looking for does not exist or has moved.",
+    "not_found_home": "Go to the home page"
+  }
+}

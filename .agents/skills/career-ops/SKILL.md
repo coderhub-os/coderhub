@@ -31,15 +31,17 @@ license: MIT
 | `linkedin` | `.agents/skills/coderhub-linkedin/SKILL.md` |
 | `readme-github` (o `readme`, `github`) | `.agents/skills/coderhub-readme-github/SKILL.md` |
 | `banner` | `.agents/skills/coderhub-banner/SKILL.md` |
-| `traducir` (o `traducir cv`, `traducir linkedin`) | `.agents/skills/coderhub-traducir/SKILL.md` |
+| `traducir` (o `traducir cv`, `traducir linkedin`, `traducir portafolio`) | `.agents/skills/coderhub-traducir/SKILL.md` |
+| `portafolio` (o `armá mi portafolio`, `actualizá mi portafolio`) | `.agents/skills/coderhub-portafolio/SKILL.md` |
 
-En el menú de Discovery Mode, sumá estas 4 líneas antes de la de `update`:
+En el menú de Discovery Mode, sumá estas 5 líneas antes de la de `update`:
 
 ```
   /coderhub linkedin      → Optimizá tu perfil de LinkedIn para LinkedIn Recruiter
   /coderhub readme-github → Armá el README de tu perfil de GitHub
   /coderhub banner        → Generá los banners de LinkedIn y GitHub (3 estilos)
   /coderhub traducir      → Pasá tu CV y tu LinkedIn al español
+  /coderhub portafolio    → Armá tu portafolio web (CV online)
 ```
 <!-- coderhub:end modes -->
 

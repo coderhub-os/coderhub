@@ -1,0 +1,134 @@
+# portafolio.example.yml — esquema del portafolio web (coderhub-portafolio)
+#
+# Copialo a config/portafolio.yml (nunca pises uno existente):
+#   cp -n .agents/skills/coderhub-portafolio/portafolio.example.yml config/portafolio.yml
+#
+# Acá va SOLO lo que no está en cv.md ni en config/profile.yml. El resto se lee
+# de ahí y no se duplica:
+#   - nombre, email, teléfono, LinkedIn, GitHub, X  → config/profile.yml (candidate.*)
+#   - titular por defecto                           → candidate.title o narrative.headline
+#   - experiencia, educación, certificaciones, skills → cv.md
+#
+# Generar el sitio:  node .agents/skills/coderhub-portafolio/build.mjs
+# Las rutas de este archivo (foto, cv_pdf) son relativas a la raíz del repo.
+# Los textos se escriben en inglés; la versión en español la escribe
+# `/coderhub traducir portafolio` en el bloque `es:` del final.
+
+# Idiomas del sitio. El PRIMERO va en la raíz (/), los demás en /{idioma}/,
+# con selector de idioma y hreflang. Valores: en, es.
+idiomas: [en, es]
+
+# Tema visual: minimalista | glassmorphism | neobrutalism | terminal
+# (los mismos nombres y paletas que /coderhub banner).
+tema: minimalista
+
+# Color de acento en hex (#RRGGBB). El build lo ajusta solo para que el texto
+# en acento tenga contraste AA en claro y en oscuro.
+acento: "#0099FF"
+
+# Modo inicial: auto (sigue la preferencia del sistema) | light | dark.
+# El visitante igual puede cambiarlo con el botón; se guarda en su navegador.
+modo_inicial: auto
+
+# Dónde se publica: github-pages | vercel.
+hosting: github-pages
+
+# Nombre del repo público del sitio. Default: {ghuser}.github.io (queda en
+# https://{ghuser}.github.io/). Con otro nombre, por ejemplo "portafolio",
+# queda en https://{ghuser}.github.io/portafolio/. Con Vercel es obligatorio
+# (queda en https://{repo}.vercel.app/). {ghuser} sale de candidate.github.
+repo: null
+
+# Dominio propio, solo si ya está comprado (ej. "martinherrera.dev").
+# Con github-pages, el build genera el archivo CNAME.
+dominio: null
+
+# URL pública exacta del sitio. Si está, gana sobre todo lo anterior
+# (siempre https://). Normalmente queda en null.
+url: null
+
+# Titular debajo del nombre. Opcional: si falta, usa candidate.title o
+# narrative.headline de config/profile.yml.
+titular: "Backend engineer building payment APIs with Node.js"
+
+# Foto (opcional): ruta a un .jpg, .jpeg, .png o .webp. El build la recorta
+# cuadrada y la re-encodea (sin EXIF ni GPS). Sin foto, se muestran las
+# iniciales. NO uses candidate.photo de profile.yml: ese campo es del CV PDF.
+foto: null
+
+# Sobre mí: 2-3 párrafos cortos, en primera persona. Párrafos separados por una
+# línea en blanco. Soporta **negrita** y [texto](https://url).
+# Si falta, usa el resumen (## Summary) de cv.md.
+sobre_mi: |
+  I build backend services for payments: APIs, ledgers and the integrations
+  around them. Most of my work is in **Node.js and TypeScript** on PostgreSQL.
+
+  Second paragraph with a concrete, real outcome from cv.md.
+
+# Proyectos (solo cards). Links solo https:// y solo reales (gh repo list,
+# cv.md, profile.yml o lo que pase el cliente). Si no hay link, se omite.
+proyectos:
+  - nombre: "project-name"
+    descripcion: "What it solves and the outcome, in one or two lines."
+    stack: [TypeScript, PostgreSQL]
+    links:
+      repo: "https://github.com/usuario/project-name"
+      demo: null
+
+# Stack destacado, con logo de Simple Icons (https://simpleicons.org).
+# slug "" (o un slug que no existe) → sale como chip de texto.
+# Debajo se listan, como texto, los grupos de "## Skills" de cv.md.
+stack:
+  - { name: "Node.js", slug: "nodedotjs" }
+  - { name: "TypeScript", slug: "typescript" }
+  - { name: "AWS", slug: "" }
+
+# Experiencia: sale de cv.md. Acá solo se recorta cuántos bullets por rol.
+experiencia:
+  max_bullets: 3
+
+# Secciones opcionales.
+secciones:
+  educacion: true          # educación de cv.md
+  certificaciones: true    # certificaciones de cv.md
+  # Recomendaciones: solo reales y textuales, con permiso del autor.
+  # Se publican tal cual (no se traducen). Sin recomendaciones: []
+  recomendaciones: []
+  #  - autor: "Nombre Apellido"
+  #    rol: "Engineering Manager, Empresa"
+  #    texto: "Texto literal de la recomendación."
+
+# Contactos que se publican (whitelist: lo que no está acá, no sale).
+# Valores: email, linkedin, github, twitter, telefono, ubicacion.
+# telefono y ubicacion NUNCA por default: solo si el cliente lo pide.
+contacto: [email, linkedin, github]
+
+# PDF del CV base por idioma (nunca uno adaptado a una oferta). Se publica
+# como cv-{nombre}-{idioma}.pdf. Sin PDF: cv_pdf: null (no hay botón).
+# Si un idioma no tiene PDF, su página ofrece el del otro idioma.
+cv_pdf:
+  en: output/cv-nombre-general.pdf
+  es: output/cv-nombre-general-es.pdf
+
+# Traducción al español: la escribe `/coderhub traducir portafolio` a partir de
+# `build.mjs --dump-content`. No la edites a mano salvo para corregir un texto.
+# Las listas van en el MISMO orden y cantidad que el dump (se emparejan por
+# posición). Si un idioma distinto de en está en `idiomas` y no tiene su
+# bloque, el build falla. Si `fuente` no coincide con el hash del contenido en
+# inglés actual, el build avisa que la traducción quedó vieja.
+# es:
+#   titular: "..."
+#   sobre_mi: |
+#     ...
+#   proyectos:
+#     - descripcion: "..."
+#   experiencia:            # un ítem por rol, en el orden del dump
+#     - rol: "..."
+#       bullets: ["...", "..."]
+#   educacion:
+#     - titulo: "..."
+#       detalle: "..."
+#   habilidades:            # opcional: grupos de ## Skills
+#     - grupo: "..."
+#       items: "..."
+#   fuente: "hash-del-dump"

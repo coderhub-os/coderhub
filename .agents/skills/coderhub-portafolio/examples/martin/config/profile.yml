@@ -1,0 +1,45 @@
+# Perfil FICTICIO de prueba (Martín) para coderhub-portafolio.
+# Trae datos privados a propósito (compensation, visa, teléfono, emails
+# alternativos, dashboard): el test de privacidad comprueba que NO se publican.
+
+candidate:
+  full_name: "Martín Herrera"
+  title: "Senior Backend Engineer"
+  email: "martin.herrera@example.com"
+  alternate_emails:
+    - "martin.h.private@example.org"
+  phone: "+54 9 351 555 0142"
+  wechat: "martinh-wechat-demo"
+  location: "Córdoba, Argentina"
+  linkedin: "linkedin.com/in/martinherrera-demo"
+  github: "github.com/martinherrera-demo"
+  twitter: "https://x.com/martinherrera_demo"
+  portfolio_url: ""
+  photo: ""
+
+narrative:
+  headline: "Backend engineer for payment platforms"
+  exit_story: "Four years shipping payment and integration backends in Node.js."
+  superpowers:
+    - "Reliable payment flows"
+    - "Clear API contracts"
+  dashboard:
+    url: "https://demo-dashboard.example.net/martin"
+    password: "demo-pass-7731"
+
+compensation:
+  target_range: "USD 5,500-6,500/month"
+  currency: "USD"
+  minimum: "USD 4,800/month"
+  location_flexibility: "Remote only, quarterly onsite trips OK"
+
+location:
+  country: "Argentina"
+  city: "Córdoba"
+  timezone: "ART"
+  visa_status: "Italian citizenship in progress, EU work permit expected 2027"
+  authorized_in: ["Argentina", "Uruguay"]
+  needs_sponsorship: false
+
+language:
+  output: en

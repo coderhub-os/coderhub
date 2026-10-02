@@ -1,0 +1,113 @@
+# Portafolio FICTICIO de prueba (Martín). Esquema: ../../../portafolio.example.yml
+idiomas: [es, en]
+tema: minimalista
+acento: "#0099FF"
+modo_inicial: auto
+hosting: github-pages
+repo: null
+dominio: null
+url: null
+
+titular: "Senior Backend Engineer building payment platforms in Node.js"
+foto: null
+
+sobre_mi: |
+  I build the backend of payment products: ledgers, payout APIs and the webhook
+  plumbing that merchants depend on. At **Nimbus Pay** I own the ledger and
+  webhook platform that moves USD 40M+ per month for 1,200 merchants.
+
+  I care about boring, reliable systems: idempotent writes, clear API
+  contracts and tracing that makes incidents short. Before Nimbus Pay I built
+  data-sync APIs for B2B SaaS clients at Tandem Labs.
+
+proyectos:
+  - nombre: "ledger-lite"
+    descripcion: "Double-entry ledger library for TypeScript with balance checks and idempotent postings."
+    stack: [TypeScript, PostgreSQL]
+    links:
+      repo: "https://github.com/martinherrera-demo/ledger-lite"
+      demo: null
+  - nombre: "webhook-relay"
+    descripcion: "Webhook delivery service with signed payloads, retries with backoff and a replay console."
+    stack: [Node.js, Redis Streams, Fastify]
+    links:
+      repo: "https://github.com/martinherrera-demo/webhook-relay"
+      demo: "https://webhook-relay.example.com"
+  - nombre: "pg-migrate-guard"
+    descripcion: "CLI that lints PostgreSQL migrations in CI and blocks the ones that lock big tables."
+    stack: [TypeScript, PostgreSQL, GitHub Actions]
+    links:
+      repo: "https://github.com/martinherrera-demo/pg-migrate-guard"
+      demo: null
+
+stack:
+  - { name: "Node.js", slug: "nodedotjs" }
+  - { name: "TypeScript", slug: "typescript" }
+  - { name: "Fastify", slug: "fastify" }
+  - { name: "PostgreSQL", slug: "postgresql" }
+  - { name: "Redis", slug: "redis" }
+  - { name: "Docker", slug: "docker" }
+  - { name: "Terraform", slug: "terraform" }
+  - { name: "OpenTelemetry", slug: "opentelemetry" }
+  - { name: "AWS", slug: "" }
+
+experiencia:
+  max_bullets: 3
+
+secciones:
+  educacion: true
+  certificaciones: true
+  recomendaciones:
+    - autor: "Lucía Fernández"
+      rol: "Engineering Manager, Nimbus Pay"
+      texto: "Martín took our webhook platform from a constant source of pages to something nobody worries about. He writes the design doc before the code and brings the whole team along."
+
+contacto: [email, linkedin, github]
+
+cv_pdf:
+  en: output/cv-martin-herrera-general.pdf
+  es: output/cv-martin-herrera-general-es.pdf
+
+# Bloque que escribe /coderhub traducir portafolio (por posición). `fuente` es
+# el hash del contenido EN (build.mjs --dump-content): si cambia, avisa.
+es:
+  fuente: "b6758e7f45f9"
+  titular: "Senior Backend Engineer que construye plataformas de pagos en Node.js"
+  sobre_mi: |
+    Construyo el backend de productos de pagos: ledgers, APIs de payouts y la
+    plomería de webhooks de la que dependen los comercios. En **Nimbus Pay** soy
+    responsable del ledger y la plataforma de webhooks que mueven más de USD 40M
+    por mes para 1.200 comercios.
+
+    Me importan los sistemas aburridos y confiables: escrituras idempotentes,
+    contratos de API claros y trazas que hacen cortos los incidentes. Antes de
+    Nimbus Pay construí APIs de sincronización de datos para clientes B2B SaaS en
+    Tandem Labs.
+  proyectos:
+    - descripcion: "Librería de ledger de partida doble para TypeScript, con chequeo de saldos y asientos idempotentes."
+    - descripcion: "Servicio de entrega de webhooks con payloads firmados, reintentos con backoff y consola de replay."
+    - descripcion: "CLI que revisa las migraciones de PostgreSQL en CI y frena las que bloquean tablas grandes."
+  experiencia:
+    - rol: "Senior Backend Engineer"
+      bullets:
+        - "Rediseñé el servicio de ledger de partida doble sobre PostgreSQL: las diferencias de conciliación bajaron de ~300 a menos de 10 por mes en 1.200 comercios."
+        - "Construí una plataforma idempotente de entrega de webhooks sobre Redis Streams, con reintentos y payloads firmados, que subió la entrega al primer intento del 91% al 99,4%."
+        - "Lideré la migración de 14 servicios de Express a Fastify detrás de un SDK compartido en TypeScript, bajando la latencia p95 un 38%."
+    - rol: "Backend Engineer"
+      bullets:
+        - "Lancé la API de payouts (REST + OpenAPI 3.1) que usa cada integración de comercios, con tests de contrato en CI."
+        - "Sumé trazas con OpenTelemetry en todo el flujo de pagos: el triage de incidentes pasó de horas a ~20 minutos."
+    - rol: "Backend Developer"
+      bullets:
+        - "Construí APIs REST y GraphQL en Node.js para 6 clientes B2B SaaS, sincronizando datos de CRM y facturación de más de 300K registros por día."
+        - "Escribí la capa de colas sobre BullMQ que reemplazó los scripts de cron y eliminó las sincronizaciones duplicadas."
+        - "Agregué tests de integración con Testcontainers: la cobertura de los servicios de sync pasó del 35% al 80%."
+  educacion:
+    - titulo: "Ingeniería en Sistemas de Información"
+      detalle: "Proyecto final sobre facturación orientada a eventos."
+  habilidades:
+    - grupo: "Backend"
+    - grupo: "Datos"
+    - grupo: "Infra"
+    - grupo: "Idiomas"
+      items: "Español (nativo), inglés (B2)"

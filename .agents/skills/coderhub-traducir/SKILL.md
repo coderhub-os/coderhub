@@ -3,14 +3,16 @@ name: coderhub-traducir
 description: >-
   CoderHub OS: traduce al español el material del cliente que se arma en
   inglés: el CV (mismo template y mismo contenido, con `lang: es`, a HTML y
-  PDF) y los textos de LinkedIn de `/coderhub linkedin`. Se invoca como
+  PDF), los textos de LinkedIn de `/coderhub linkedin` y los textos del
+  portafolio web (bloque `es:` de `config/portafolio.yml`). Se invoca como
   `/coderhub traducir` (o `/coderhub traducir cv`, `/coderhub traducir
-  linkedin`). No agrega ni cambia datos: traduce lo que ya está aprobado.
+  linkedin`, `/coderhub traducir portafolio`). No agrega ni cambia datos:
+  traduce lo que ya está aprobado.
 ---
 
 # CoderHub — Traducir al español
 
-El CV, el LinkedIn y el README se arman **en inglés** (es la superficie global). Esta skill saca la **versión en español** del CV y de los textos de LinkedIn para postulaciones y recruiters de LATAM o España, sin tocar los originales.
+El CV, el LinkedIn y el README se arman **en inglés** (es la superficie global). Esta skill saca la **versión en español** del CV, de los textos de LinkedIn y de los textos del portafolio web para postulaciones y recruiters de LATAM o España, sin tocar los originales.
 
 - **Charla:** en español con "vos", según `modes/_coderhub.md` (cargalo si no está en contexto).
 - Todas las rutas son relativas a `PROJECT_ROOT` (la carpeta con `AGENTS.md` y `modes/`).
@@ -22,11 +24,12 @@ El CV, el LinkedIn y el README se arman **en inglés** (es la superficie global)
 |---|---|
 | `cv` | El CV en inglés más reciente de `output/` → `output/cv-{candidate}-{slug}-es.html` y `.pdf` |
 | `linkedin` | El último `output/linkedin/*_linkedin-optimizado.md` → `output/linkedin/{YYYY-MM-DD}_linkedin-optimizado-es.md` |
-| (nada) | Preguntá: *"Qué querés pasar al español: el CV, el LinkedIn o los dos?"* |
+| `portafolio` | El contenido en inglés del portafolio (`build.mjs --dump-content`) → bloque `es:` de `config/portafolio.yml` |
+| (nada) | Preguntá: *"Qué querés pasar al español: el CV, el LinkedIn, el portafolio o todo?"* |
 
-Lo que salga de acá también sirve de base para el portafolio en español.
+El portafolio en español no sale del CV ni del LinkedIn traducidos: se traduce aparte, desde su propio contenido en inglés (`/coderhub traducir portafolio`).
 
-## Reglas de traducción (las dos piezas)
+## Reglas de traducción (todas las piezas)
 
 1. **Cero datos nuevos.** Se traduce lo que ya está. No se suman logros, números, roles, tecnologías ni fechas. Si el cliente quiere cambiar contenido, eso va primero al original en inglés (`/coderhub pdf` o `/coderhub linkedin`) y después se traduce.
 2. **Mismo orden y mismo largo.** Misma estructura, mismas secciones, mismos bullets. Una traducción que agrega o saca bullets ya no es la misma historia.
@@ -87,11 +90,32 @@ Lo que salga de acá también sirve de base para el portafolio en español.
 5. **Cómo se usa (explicáselo):** LinkedIn permite un **perfil secundario en otro idioma** (perfil → "Agregar perfil en otro idioma"). El perfil principal queda en inglés; el de español se ve para quien tiene LinkedIn en español. No reemplaces el principal.
 6. Guardalo en `output/linkedin/{YYYY-MM-DD}_linkedin-optimizado-es.md` y mostrale la ruta.
 
+## Portafolio a español
+
+1. **Fuente:** el contenido en inglés del portafolio, tal como lo arma el generador:
+
+   ```bash
+   node .agents/skills/coderhub-portafolio/build.mjs --dump-content
+   ```
+
+   Imprime un JSON con el contenido EN (titular, sobre mí, proyectos, experiencia, educación) y su hash. Si falla porque no hay `config/portafolio.yml`: *"Todavía no armamos tu portafolio. Arrancá con `/coderhub portafolio` y después lo traducimos."* y pará. Si falla por otra validación, mostrale el mensaje y pará.
+2. **Traducí** con las "Reglas de traducción" de arriba (cero datos nuevos, keywords y roles en inglés, mismos números, nombres propios intactos). El portafolio es una página personal: primera persona, español neutro, sin voseo.
+3. **Armá el bloque `es:`** de `config/portafolio.yml`:
+   - `titular`, `sobre_mi` (mismos párrafos; `**negrita**` y `[texto](url)` quedan en el mismo lugar, solo cambia el texto).
+   - `proyectos: [{descripcion}]` y `experiencia: [{rol, bullets: []}]` en el **mismo orden y cantidad** que el dump (el generador los empareja por posición). Mismos bullets por rol.
+   - `educacion`, en el mismo orden que el dump.
+   - `fuente`: el hash que imprime el dump, tal cual. Si después cambia el contenido en inglés, el build avisa que la traducción quedó vieja.
+
+   Si ya había un bloque `es:`, actualizalo en el lugar; el resto del archivo no se toca.
+4. **Mostrale el diff** del bloque `es:` (lo nuevo contra lo que había, o el bloque entero si es la primera vez) y escribilo **solo con su OK**.
+5. **Números a mano:** el fact gate no corre sobre el portafolio y en español tampoco chequearía conteos. Comparale cada número del bloque `es:` contra el dump en inglés (años, porcentajes, cantidades) y decile que lo revise él también.
+6. Si `es` no está en `idiomas:` de `config/portafolio.yml`, avisale que la traducción no se publica hasta sumarlo. Para regenerar el sitio: `/coderhub portafolio`.
+
 ## Reglas
 
-- **No toques los originales en inglés.** Siempre es un archivo nuevo con sufijo `-es`.
+- **No toques los originales en inglés.** Siempre es un archivo nuevo con sufijo `-es` (en el portafolio, solo el bloque `es:` de `config/portafolio.yml`).
 - **No inventes ni "mejores" contenido.** Si en la traducción ves algo flojo en el original, avisalo y proponé arreglarlo en el original primero.
-- **Fact gate en verde antes del PDF.** Sin excepciones.
+- **Fact gate en verde antes del PDF.** Sin excepciones. En el portafolio, los números se comparan a mano.
 - **Keywords técnicas en inglés.** Traducir "Kubernetes" o "Backend Engineer" hace que el CV no aparezca en las búsquedas.
 
 ## Si el cliente marca un problema
