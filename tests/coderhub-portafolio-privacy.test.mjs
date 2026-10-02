@@ -18,12 +18,13 @@
 //     without the tel: link, so they differ from the source PDF and have no
 //     tel: URI (link URIs are plain text in the PDF; mailto: is the control);
 //     without the sibling HTML the build fails instead of publishing the phone
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, statSync } from 'fs';
+import { cpSync, existsSync, writeFileSync, mkdtempSync, readFileSync, readdirSync, statSync } from 'fs';
 import { inflateSync } from 'zlib';
 import { pathToFileURL } from 'url';
 import { tmpdir } from 'os';
 import { dirname, join, relative, resolve, sep } from 'path';
 import * as yaml from 'js-yaml';
+import { chromium } from 'playwright';
 import { isNestedCheckout } from '../lib/mjs-files.mjs';
 import { pass, fail, run, lastRunFailure, rmSync, ROOT, NODE } from './helpers.mjs';
 
@@ -32,6 +33,10 @@ console.log('\nCoderHub OS portafolio: privacy + links (coderhub-portafolio)');
 const SKILL = '.agents/skills/coderhub-portafolio';
 const BUILD = join(ROOT, SKILL, 'build.mjs');
 const FIXTURE = join(ROOT, SKILL, 'examples', 'martin');
+// The CV PDF is re-rendered with Chromium. The quick CI job has no browser: there
+// the site is built from a copy of the fixture with cv_pdf: null and the PDF
+// checks are skipped: run this test locally (with Chromium) before a release.
+const HAS_CHROMIUM = (() => { try { return existsSync(chromium.executablePath()); } catch { return false; } })();
 const BINARY = /\.(png|jpe?g|gif|webp|avif|ico|pdf|woff2?|ttf|otf)$/i;
 
 const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -71,8 +76,16 @@ if (!existsSync(BUILD)) {
   fail(`${SKILL}/examples/martin/config/profile.yml does not exist yet: the portfolio privacy test cannot run`);
 } else {
   const out = mkdtempSync(join(tmpdir(), 'coderhub-portafolio-'));
+  let buildRoot = FIXTURE;
+  if (!HAS_CHROMIUM) {
+    buildRoot = mkdtempSync(join(tmpdir(), 'coderhub-portafolio-fx-'));
+    cpSync(FIXTURE, buildRoot, { recursive: true });
+    const cfgPath = join(buildRoot, 'config', 'portafolio.yml');
+    const noPdf = { ...(yaml.load(readFileSync(cfgPath, 'utf8')) || {}), cv_pdf: null };
+    writeFileSync(cfgPath, yaml.dump(noPdf));
+  }
   try {
-    const stdout = run(NODE, [BUILD, `--root=${FIXTURE}`, `--out=${out}`, '--no-og'], { timeout: 120000 });
+    const stdout = run(NODE, [BUILD, `--root=${buildRoot}`, `--out=${out}`, '--no-og'], { timeout: 120000 });
     if (stdout === null) {
       const d = lastRunFailure();
       fail(`build.mjs failed on the martin fixture (exit ${d?.status ?? '?'}): ${(d?.stderr || d?.stdout || '').trim().slice(0, 800)}`);
@@ -153,67 +166,71 @@ if (!existsSync(BUILD)) {
       if (broken.length) fail(`site has ${broken.length} broken relative link(s): ${broken.slice(0, 10).join(' | ')}`);
       else pass(`all ${checked} relative href/src resolve to generated files`);
 
-      // CV PDFs without the phone.
-      const summary = JSON.parse(stdout);
-      const cfg = yaml.load(readFileSync(join(FIXTURE, 'config', 'portafolio.yml'), 'utf8')) || {};
-      const phone = String(profile.candidate?.phone || '');
-      const phoneDigits = phone.replace(/\D/g, '');
-      const { stripPhone } = await import(pathToFileURL(BUILD).href);
-      if ((cfg.contacto || []).includes('telefono')) fail('fixture portafolio.yml publishes telefono: the PDF phone check has nothing to check');
-      const pdfEntries = Object.entries(cfg.cv_pdf || {}).filter(([, rel]) => rel);
-      if (pdfEntries.length === 0) fail('fixture portafolio.yml has no cv_pdf: the PDF phone check has nothing to check');
-      /** Raw PDF text plus every inflatable stream, latin1. */
-      const pdfText = (buf) => {
-        const raw = buf.toString('latin1');
-        const parts = [raw];
-        for (const m of raw.matchAll(/stream\r?\n/g)) {
-          const start = m.index + m[0].length;
-          const end = raw.indexOf('endstream', start);
-          if (end === -1) continue;
-          try { parts.push(inflateSync(buf.subarray(start, end)).toString('latin1')); } catch { /* not flate */ }
+      if (!HAS_CHROMIUM) pass('CV PDF checks skipped: Chromium is not installed (run them locally before a release)');
+      else {
+        // CV PDFs without the phone.
+        const summary = JSON.parse(stdout);
+        const cfg = yaml.load(readFileSync(join(FIXTURE, 'config', 'portafolio.yml'), 'utf8')) || {};
+        const phone = String(profile.candidate?.phone || '');
+        const phoneDigits = phone.replace(/\D/g, '');
+        const { stripPhone } = await import(pathToFileURL(BUILD).href);
+        if ((cfg.contacto || []).includes('telefono')) fail('fixture portafolio.yml publishes telefono: the PDF phone check has nothing to check');
+        const pdfEntries = Object.entries(cfg.cv_pdf || {}).filter(([, rel]) => rel);
+        if (pdfEntries.length === 0) fail('fixture portafolio.yml has no cv_pdf: the PDF phone check has nothing to check');
+        /** Raw PDF text plus every inflatable stream, latin1. */
+        const pdfText = (buf) => {
+          const raw = buf.toString('latin1');
+          const parts = [raw];
+          for (const m of raw.matchAll(/stream\r?\n/g)) {
+            const start = m.index + m[0].length;
+            const end = raw.indexOf('endstream', start);
+            if (end === -1) continue;
+            try { parts.push(inflateSync(buf.subarray(start, end)).toString('latin1')); } catch { /* not flate */ }
+          }
+          return parts.join('\n');
+        };
+        for (const [lang, rel] of pdfEntries) {
+          const src = join(FIXTURE, rel);
+          const htmlSrc = src.replace(/\.pdf$/i, '.html');
+          const published = summary.publico?.find((p) => p.dato === `cv_pdf (${lang})`);
+          const file = published ? join(out, published.valor.split(' ')[0]) : null;
+          if (!file || !existsSync(file)) { fail(`cv_pdf.${lang}: the published PDF is missing from the site`); continue; }
+          const buf = readFileSync(file);
+          if (buf.subarray(0, 5).toString() !== '%PDF-') fail(`cv_pdf.${lang}: ${relative(out, file)} is not a PDF`);
+          else if (buf.equals(readFileSync(src))) fail(`cv_pdf.${lang}: published PDF is a byte copy of ${rel} (phone not removed)`);
+          else pass(`cv_pdf.${lang}: published PDF is re-rendered, not a copy of ${rel}`);
+          const text = pdfText(buf);
+          if (!/\/URI\s*\(mailto:/.test(text)) fail(`cv_pdf.${lang}: no mailto: URI in the PDF, so the tel: check would prove nothing`);
+          else if (/\/URI\s*\(tel:/i.test(text)) fail(`cv_pdf.${lang}: published PDF still has a tel: link`);
+          else pass(`cv_pdf.${lang}: published PDF has no tel: link (and keeps mailto:)`);
+          if (!existsSync(htmlSrc)) { fail(`fixture is missing ${relative(FIXTURE, htmlSrc)}`); continue; }
+          const html = readFileSync(htmlSrc, 'utf8');
+          if (!html.includes(phone)) fail(`fixture ${relative(FIXTURE, htmlSrc)} has no phone: nothing to strip`);
+          const clean = stripPhone(html, phone);
+          const cleanDigits = clean.replace(/<[^>]+>/g, ' ').replace(/[\s().+-]/g, '');
+          if (clean.includes(phone) || /tel:/i.test(clean) || cleanDigits.includes(phoneDigits)) fail(`cv_pdf.${lang}: the HTML rendered to PDF still has the phone`);
+          else if (!clean.includes(String(profile.candidate?.email))) fail(`cv_pdf.${lang}: stripping the phone also dropped the email`);
+          else if (/<span class="separator">\|<\/span>\s*<span class="separator">/.test(clean) || /contact-row">\s*<span class="separator">/.test(clean)) fail(`cv_pdf.${lang}: stripping the phone left a dangling separator`);
+          else pass(`cv_pdf.${lang}: the HTML rendered to PDF has no phone and keeps the rest of the header`);
+          if (published.contacto?.includes('telefono')) fail(`cv_pdf.${lang}: summary says the PDF carries telefono`);
+          else if (published.contacto?.includes('email')) pass(`cv_pdf.${lang}: summary lists the PDF contact data without telefono`);
+          else fail(`cv_pdf.${lang}: summary does not list the PDF contact data`);
         }
-        return parts.join('\n');
-      };
-      for (const [lang, rel] of pdfEntries) {
-        const src = join(FIXTURE, rel);
-        const htmlSrc = src.replace(/\.pdf$/i, '.html');
-        const published = summary.publico?.find((p) => p.dato === `cv_pdf (${lang})`);
-        const file = published ? join(out, published.valor.split(' ')[0]) : null;
-        if (!file || !existsSync(file)) { fail(`cv_pdf.${lang}: the published PDF is missing from the site`); continue; }
-        const buf = readFileSync(file);
-        if (buf.subarray(0, 5).toString() !== '%PDF-') fail(`cv_pdf.${lang}: ${relative(out, file)} is not a PDF`);
-        else if (buf.equals(readFileSync(src))) fail(`cv_pdf.${lang}: published PDF is a byte copy of ${rel} (phone not removed)`);
-        else pass(`cv_pdf.${lang}: published PDF is re-rendered, not a copy of ${rel}`);
-        const text = pdfText(buf);
-        if (!/\/URI\s*\(mailto:/.test(text)) fail(`cv_pdf.${lang}: no mailto: URI in the PDF, so the tel: check would prove nothing`);
-        else if (/\/URI\s*\(tel:/i.test(text)) fail(`cv_pdf.${lang}: published PDF still has a tel: link`);
-        else pass(`cv_pdf.${lang}: published PDF has no tel: link (and keeps mailto:)`);
-        if (!existsSync(htmlSrc)) { fail(`fixture is missing ${relative(FIXTURE, htmlSrc)}`); continue; }
-        const html = readFileSync(htmlSrc, 'utf8');
-        if (!html.includes(phone)) fail(`fixture ${relative(FIXTURE, htmlSrc)} has no phone: nothing to strip`);
-        const clean = stripPhone(html, phone);
-        const cleanDigits = clean.replace(/<[^>]+>/g, ' ').replace(/[\s().+-]/g, '');
-        if (clean.includes(phone) || /tel:/i.test(clean) || cleanDigits.includes(phoneDigits)) fail(`cv_pdf.${lang}: the HTML rendered to PDF still has the phone`);
-        else if (!clean.includes(String(profile.candidate?.email))) fail(`cv_pdf.${lang}: stripping the phone also dropped the email`);
-        else if (/<span class="separator">\|<\/span>\s*<span class="separator">/.test(clean) || /contact-row">\s*<span class="separator">/.test(clean)) fail(`cv_pdf.${lang}: stripping the phone left a dangling separator`);
-        else pass(`cv_pdf.${lang}: the HTML rendered to PDF has no phone and keeps the rest of the header`);
-        if (published.contacto?.includes('telefono')) fail(`cv_pdf.${lang}: summary says the PDF carries telefono`);
-        else if (published.contacto?.includes('email')) pass(`cv_pdf.${lang}: summary lists the PDF contact data without telefono`);
-        else fail(`cv_pdf.${lang}: summary does not list the PDF contact data`);
-      }
 
-      // Without the sibling HTML the build refuses to publish the phone.
-      const noHtml = mkdtempSync(join(tmpdir(), 'coderhub-portafolio-nohtml-'));
-      try {
-        cpSync(FIXTURE, noHtml, { recursive: true, filter: (p) => !/\.html$/i.test(p) });
-        const res = run(NODE, [BUILD, `--root=${noHtml}`, `--out=${join(noHtml, 'site')}`, '--no-og'], { timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'] });
-        const d = lastRunFailure();
-        if (res !== null) fail('build.mjs published the CV PDF without the sibling HTML (the phone would leak)');
-        else if (!/no encuentro .*\.html/.test(d?.stderr || '')) fail(`build.mjs failed without the sibling HTML, but not with the expected message: ${(d?.stderr || '').trim().slice(0, 300)}`);
-        else if (existsSync(join(noHtml, 'site'))) fail('build.mjs wrote the site even though the CV PDF check failed');
-        else pass('without the sibling HTML the build fails with a clear message and writes nothing');
-      } finally {
-        rmSync(noHtml, { recursive: true, force: true });
+        // Without the sibling HTML the build refuses to publish the phone.
+        const noHtml = mkdtempSync(join(tmpdir(), 'coderhub-portafolio-nohtml-'));
+        try {
+          cpSync(FIXTURE, noHtml, { recursive: true, filter: (p) => !/\.html$/i.test(p) });
+          const res = run(NODE, [BUILD, `--root=${noHtml}`, `--out=${join(noHtml, 'site')}`, '--no-og'], { timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'] });
+          const d = lastRunFailure();
+          if (res !== null) fail('build.mjs published the CV PDF without the sibling HTML (the phone would leak)');
+          else if (!/no encuentro .*\.html/.test(d?.stderr || '')) fail(`build.mjs failed without the sibling HTML, but not with the expected message: ${(d?.stderr || '').trim().slice(0, 300)}`);
+          else if (existsSync(join(noHtml, 'site'))) fail('build.mjs wrote the site even though the CV PDF check failed');
+          else pass('without the sibling HTML the build fails with a clear message and writes nothing');
+        } finally {
+          rmSync(noHtml, { recursive: true, force: true });
+        }
+
       }
 
       // cv.md parser: a bullet that is only a place is not an achievement.
@@ -243,5 +260,6 @@ if (!existsSync(BUILD)) {
     }
   } finally {
     rmSync(out, { recursive: true, force: true });
+    if (buildRoot !== FIXTURE) rmSync(buildRoot, { recursive: true, force: true });
   }
 }
