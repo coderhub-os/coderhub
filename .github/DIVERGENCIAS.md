@@ -91,3 +91,4 @@ El updater de los clientes lee `VERSION` de `main` (`RAW_VERSION_URL`) y el tag 
 | v1.0.3 | v1.34.0 (`7521f7fe`, 33 commits después del tag) |
 | v1.1.0 | v1.34.0 (`7521f7fe`, igual que v1.0.3) |
 | v1.2.0 | v1.34.0 (`7521f7fe`, igual que v1.1.0) |
+| v1.2.1 | v1.34.0 (`7521f7fe`, igual que v1.2.0) |
