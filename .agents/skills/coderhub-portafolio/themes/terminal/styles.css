@@ -176,7 +176,7 @@ main:focus { outline: none; }
 .hero__eyebrow { order: 3; margin-top: 1.1rem; color: var(--string); }
 .hero__eyebrow::before { content: "# stack: "; content: "# stack: " / ""; color: var(--muted); }
 .links--hero { order: 4; }
-.hero__actions { order: 5; }
+.hero__actions { order: 5; display: flex; flex-wrap: wrap; gap: .75rem; }
 @keyframes term-blink { 50% { opacity: 0; } }
 
 .links { display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; list-style: none; margin-top: 1.5rem; }
@@ -194,6 +194,8 @@ a.link:hover .link__text { text-decoration: underline; text-underline-offset: .2
 .button:hover { filter: brightness(1.08); }
 .button--ghost { background: transparent; color: var(--fg); border-color: var(--border); }
 .button--ghost:hover { border-color: var(--accent); filter: none; }
+button.button { cursor: pointer; }
+.button--ai.is-copied { border-color: var(--accent); color: var(--accent); }
 
 /* ── secciones ── */
 .section { padding: 3.25rem 0; border-top: 1px dashed var(--border); }

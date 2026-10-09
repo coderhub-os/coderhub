@@ -53,6 +53,7 @@ titular: "Backend engineer building payment APIs with Node.js"
 
 # Línea chica arriba del nombre (hero y tarjeta OG). Opcional: si falta, usa
 # los 3 primeros nombres de `stack` ("Node.js · TypeScript · PostgreSQL").
+# En el tema terminal no hay default: sin `eyebrow`, no se muestra la línea.
 # Si la ponés, va en la traducción (es.eyebrow).
 eyebrow: null
 
@@ -122,6 +123,12 @@ contacto: [email, linkedin, github]
 cv_pdf:
   en: output/cv-nombre-general.pdf
   es: output/cv-nombre-general-es.pdf
+
+# Botón "Copiar para IA" en el hero, al lado del CV: copia al portapapeles un
+# perfil en markdown (el mismo texto que llms.txt, en el idioma de la página)
+# para pegarlo en un chat de IA. Va embebido en la página, sin requests.
+# Con false no se muestra el botón ni se embebe el perfil.
+boton_ia: true
 
 # Traducción al español: la escribe `/coderhub traducir portafolio` a partir de
 # `build.mjs --dump-content`. No la edites a mano salvo para corregir un texto.

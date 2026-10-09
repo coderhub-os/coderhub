@@ -102,6 +102,8 @@ main:focus { outline: none; }
 .button:hover { background: color-mix(in srgb, var(--accent) 86%, var(--fg)); }
 .button--ghost { background: transparent; color: var(--fg); border-color: var(--rule); }
 .button--ghost:hover { background: transparent; border-color: var(--fg); }
+button.button { cursor: pointer; }
+.button--ai.is-copied { border-color: var(--accent); }
 
 /* ── header ── */
 .site-header {

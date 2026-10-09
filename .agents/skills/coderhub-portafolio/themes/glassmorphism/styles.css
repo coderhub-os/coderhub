@@ -246,6 +246,9 @@ a.link:hover .link__text { text-decoration: underline; text-underline-offset: .2
 }
 .button:hover { filter: brightness(1.07); }
 .button--ghost { background: var(--glass-strong); color: var(--fg); border-color: var(--glass-border); box-shadow: none; }
+button.button { font-family: inherit; font-size: inherit; line-height: inherit; cursor: pointer; }
+.hero__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.button--ai.is-copied { border-color: var(--accent); }
 
 /* ── secciones ── */
 .section { padding: 3.25rem 0; }

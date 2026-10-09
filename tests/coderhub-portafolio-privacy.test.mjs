@@ -18,6 +18,9 @@
 //     without the tel: link, so they differ from the source PDF and have no
 //     tel: URI (link URIs are plain text in the PDF; mailto: is the control);
 //     without the sibling HTML the build fails instead of publishing the phone
+//   - every theme and language has the "Copy for AI" button and its embedded
+//     markdown profile (same privacy scan, same text as llms.txt); boton_ia:
+//     false drops both; the terminal theme has no automatic stack eyebrow
 import { cpSync, existsSync, writeFileSync, mkdtempSync, readFileSync, readdirSync, statSync } from 'fs';
 import { inflateSync } from 'zlib';
 import { pathToFileURL } from 'url';
@@ -231,6 +234,89 @@ if (!existsSync(BUILD)) {
           rmSync(noHtml, { recursive: true, force: true });
         }
 
+      }
+
+      // "Copy for AI" button: present in every theme and language, the embedded
+      // markdown profile passes the same privacy scan, and `boton_ia: false`
+      // drops both. The terminal theme has no automatic stack eyebrow.
+      {
+        const AI_SCRIPT = /<script type="text\/markdown" id="ai-profile">([\s\S]*?)<\/script>/;
+        const LABELS = { 'index.html': ['Copiar para IA', '¡Copiado!'], 'en/index.html': ['Copy for AI', 'Copied!'] };
+        const fx = mkdtempSync(join(tmpdir(), 'coderhub-portafolio-ai-'));
+        const fxCfg = join(fx, 'config', 'portafolio.yml');
+        cpSync(FIXTURE, fx, { recursive: true });
+        const baseCfg = yaml.load(readFileSync(join(FIXTURE, 'config', 'portafolio.yml'), 'utf8')) || {};
+        const noEyebrow = { ...baseCfg, cv_pdf: null, eyebrow: null, es: { ...(baseCfg.es || {}) } };
+        delete noEyebrow.eyebrow;
+        delete noEyebrow.es.eyebrow;
+        const buildAi = (cfgObj, theme) => {
+          writeFileSync(fxCfg, yaml.dump(cfgObj));
+          const dir = mkdtempSync(join(tmpdir(), `coderhub-portafolio-${theme}-`));
+          const ok = run(NODE, [BUILD, `--root=${fx}`, `--out=${dir}`, `--theme=${theme}`, '--no-og'], { timeout: 120000 }) !== null;
+          if (!ok) {
+            const d = lastRunFailure();
+            fail(`build.mjs --theme=${theme} failed (exit ${d?.status ?? '?'}): ${(d?.stderr || d?.stdout || '').trim().slice(0, 400)}`);
+          }
+          return { dir, ok };
+        };
+        try {
+          for (const theme of ['minimalista', 'glassmorphism', 'neobrutalism', 'terminal']) {
+            const { dir, ok } = buildAi(noEyebrow, theme);
+            try {
+              if (!ok) continue;
+              for (const [rel, [label, done]] of Object.entries(LABELS)) {
+                const html = readFileSync(join(dir, rel), 'utf8');
+                const actions = html.match(/<div class="hero__actions">([\s\S]*?)<\/div>/)?.[1] || '';
+                const btn = actions.match(/<button[^>]*\bdata-copy-ai\b[^>]*>[\s\S]*?<\/button>/)?.[0] || '';
+                const okBtn = /class="button button--ghost button--ai"/.test(btn) && btn.includes(label) && btn.includes(`data-copied="${done}"`)
+                  && /<svg\b/.test(btn) && /aria-live="polite"/.test(actions);
+                (okBtn ? pass : fail)(`${theme} ${rel}: "${label}" button in .hero__actions (icon, aria-live)`);
+                const md = html.match(AI_SCRIPT)?.[1] || '';
+                if (md.trim().startsWith('# ')) pass(`${theme} ${rel}: embedded markdown profile`);
+                else fail(`${theme} ${rel}: no <script type="text/markdown" id="ai-profile"> profile`);
+                const lower = md.toLowerCase();
+                const leaked = secrets.filter(([, v]) => v.trim().length >= 4 && lower.includes(v.trim().toLowerCase()));
+                const bad = forbidden.filter(([, test]) => test(md));
+                if (leaked.length || bad.length) fail(`${theme} ${rel}: embedded profile leaks ${[...leaked.map(([f, v]) => `${f} "${v}"`), ...bad.map(([l]) => l)].join(', ')}`);
+                else pass(`${theme} ${rel}: embedded profile passes the privacy scan`);
+                if (rel === 'en/index.html') {
+                  const llms = readFileSync(join(dir, 'llms.txt'), 'utf8');
+                  (md.trim() === llms.trim() ? pass : fail)(`${theme}: the English profile is the same text as llms.txt`);
+                }
+                const eyebrow = /hero__eyebrow/.test(html);
+                if (theme === 'terminal') (eyebrow ? fail : pass)(`terminal ${rel}: no automatic stack eyebrow`);
+                else (eyebrow ? pass : fail)(`${theme} ${rel}: automatic stack eyebrow`);
+              }
+            } finally {
+              rmSync(dir, { recursive: true, force: true });
+            }
+          }
+
+          // boton_ia: false (and an explicit eyebrow, which terminal still shows).
+          const { dir, ok } = buildAi({ ...baseCfg, cv_pdf: null, boton_ia: false }, 'terminal');
+          try {
+            if (ok) {
+              for (const rel of Object.keys(LABELS)) {
+                const html = readFileSync(join(dir, rel), 'utf8');
+                const gone = !/data-copy-ai/.test(html) && !/id="ai-profile"/.test(html);
+                (gone ? pass : fail)(`boton_ia: false drops the button and the profile in ${rel}`);
+                (/hero__eyebrow/.test(html) ? pass : fail)(`terminal ${rel}: explicit eyebrow is still shown`);
+              }
+            }
+          } finally {
+            rmSync(dir, { recursive: true, force: true });
+          }
+
+          // boton_ia must be a boolean.
+          writeFileSync(fxCfg, yaml.dump({ ...baseCfg, cv_pdf: null, boton_ia: 'si' }));
+          const badDir = mkdtempSync(join(tmpdir(), 'coderhub-portafolio-bad-'));
+          const res = run(NODE, [BUILD, `--root=${fx}`, `--out=${badDir}`, '--no-og'], { timeout: 120000 });
+          rmSync(badDir, { recursive: true, force: true });
+          const msg = res === null ? `${lastRunFailure()?.stderr || ''}${lastRunFailure()?.stdout || ''}` : '';
+          (res === null && /boton_ia/.test(msg) ? pass : fail)('build.mjs rejects a non-boolean boton_ia');
+        } finally {
+          rmSync(fx, { recursive: true, force: true });
+        }
       }
 
       // cv.md parser: a bullet that is only a place is not an achievement.

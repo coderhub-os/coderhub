@@ -34,7 +34,8 @@ Arma el **portafolio web** del cliente: un sitio estático, 100% suyo, que funci
 |---|---|
 | Nombre, email, teléfono, LinkedIn, GitHub, Twitter, URL del portafolio | `config/profile.yml` → `candidate.*` |
 | Titular | `portafolio.yml → titular`; si no hay, `candidate.title` o `narrative.headline` de `profile.yml` |
-| Eyebrow del hero (la línea chica arriba del nombre) | `portafolio.yml → eyebrow`; si no hay, los 3 primeros de `stack` (ej. `Go · Kubernetes · AWS`) |
+| Eyebrow del hero (la línea chica arriba del nombre) | `portafolio.yml → eyebrow`; si no hay, los 3 primeros de `stack` (ej. `Go · Kubernetes · AWS`), salvo en el tema `terminal`, que sin `eyebrow` no muestra la línea |
+| Botón "Copiar para IA" del hero | `portafolio.yml → boton_ia` (default `true`): copia al portapapeles el perfil en markdown del idioma de la página (el mismo texto que `llms.txt`, embebido en el HTML, sin requests); con `false` no hay botón ni perfil embebido |
 | Ubicación | `config/profile.yml` → `location.city` / `location.country` (se publica solo si el cliente lo pide) |
 | Experiencia, educación, certificaciones, grupos de skills | `cv.md` (`## Experience`, `## Education`, `## Certifications`, `## Skills`) |
 | Logros con números, proyectos | `cv.md` (+ `article-digest.md` si existe) |

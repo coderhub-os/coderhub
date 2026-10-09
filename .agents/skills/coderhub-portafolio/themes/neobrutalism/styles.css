@@ -183,6 +183,8 @@ span.link { box-shadow: none; border-style: dashed; background: transparent; }
 .button:active { transform: translate(5px, 5px); box-shadow: 0 0 0 var(--hard-on-accent); }
 .button--ghost { background: var(--surface); color: var(--fg); box-shadow: 5px 5px 0 var(--hard); }
 .button--ghost:hover { box-shadow: 7px 7px 0 var(--hard); }
+button.button { font-family: inherit; font-size: inherit; line-height: inherit; cursor: pointer; }
+.hero__actions { display: flex; flex-wrap: wrap; gap: 1rem; }
 
 /* ── secciones ── */
 .section { padding: 4rem 0; border-bottom: var(--bw) solid var(--line); }

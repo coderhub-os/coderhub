@@ -457,6 +457,7 @@ function validate(cfg, profile, root, themeOverride, errors, warnings) {
   }
   if (cfg.sobre_mi !== undefined && cfg.sobre_mi !== null && typeof cfg.sobre_mi !== 'string') errors.push('portafolio.yml: `sobre_mi` tiene que ser texto');
   if (cfg.eyebrow !== undefined && cfg.eyebrow !== null && typeof cfg.eyebrow !== 'string') errors.push('portafolio.yml: `eyebrow` tiene que ser texto (ej. "Node.js · TypeScript · AWS")');
+  if (cfg.boton_ia !== undefined && cfg.boton_ia !== null && typeof cfg.boton_ia !== 'boolean') errors.push('portafolio.yml: `boton_ia` tiene que ser true o false');
 
   const proyectos = cfg.proyectos ?? [];
   if (!Array.isArray(proyectos)) errors.push('portafolio.yml: `proyectos` tiene que ser una lista');
@@ -1241,6 +1242,42 @@ async function main() {
       )
       .join('\n');
 
+  // Perfil en markdown de un idioma: llms.txt y el botón "Copiar para IA" (solo lo que ya está publicado).
+  const llmsMd = (lang) => {
+    const k = byLang[lang];
+    const t = i18n[lang];
+    const md = [`# ${fullName}`, ''];
+    if (k.titular) md.push(`> ${k.titular}`, '');
+    if (k.sobre_mi) md.push(...paragraphs(k.sobre_mi).map((p) => `${plain(p)}\n`));
+    if (cv.experience.length) {
+      md.push(`## ${t.nav.experience}`, '');
+      let ri = 0;
+      for (const co of cv.experience)
+        for (const r of co.roles) {
+          const tr = k.experiencia[ri++];
+          md.push(`- ${[tr?.rol || r.rol, co.empresa].filter(Boolean).join(', ')}${r.fechas || co.fechas ? ` (${localizeDates(r.fechas || co.fechas, lang, t.present)})` : ''}`);
+        }
+      md.push('');
+    }
+    if (k.proyectos.length) {
+      md.push(`## ${t.nav.projects}`, '');
+      k.proyectos.forEach((p, i) => {
+        const repo = str(cfg.proyectos[i].links?.repo) || str(cfg.proyectos[i].links?.demo);
+        md.push(`- ${repo ? `[${p.nombre}](${repo})` : p.nombre}: ${plain(p.descripcion)}`);
+      });
+      md.push('');
+    }
+    if (stackCfg.length) md.push(`## ${t.nav.stack}`, '', stackCfg.map((s) => s.name).join(', '), '');
+    md.push(`## ${t.links}`, '');
+    for (const l of idiomas) md.push(`- ${i18n[l].lang_name}: ${pageUrl(l)}`);
+    for (const l of links) md.push(`- ${l.label || t.contact[l.k]}: ${l.href ? l.href.replace(/^mailto:/, '') : l.text}`);
+    for (const [l, p] of Object.entries(pdfs)) md.push(`- ${t.download_cv} (${l}): ${baseUrl}${p.file}`);
+    return `${md.join('\n').replace(/\n{3,}/g, '\n\n').trim()}\n`;
+  };
+  const botonIa = cfg.boton_ia !== false;
+  // Texto dentro de <script type="text/markdown">: site.js deshace estos escapes al copiar.
+  const scriptSafe = (md) => md.replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
+
   const pages = [];
   const ogFiles = {};
   for (const lang of idiomas) {
@@ -1250,7 +1287,8 @@ async function main() {
     const nav = [];
 
     // Hero.
-    const eyebrow = k.eyebrow || stackCfg.slice(0, 3).map((s) => s.name).join(' · ');
+    // Sin `eyebrow` propio, el default son los 3 primeros del stack (salvo en los temas con "eyebrow_auto": false).
+    const eyebrow = k.eyebrow || (theme.eyebrow_auto === false ? '' : stackCfg.slice(0, 3).map((s) => s.name).join(' · '));
     const linksHtml = links
       .map((l) => {
         const label = l.label ? `<span class="visually-hidden">${esc(l.label)}: </span>` : '';
@@ -1267,11 +1305,14 @@ async function main() {
       : '';
     const hero = fill(partial('hero'), {
       AVATAR: avatarHtml(fullName, prefix),
-      EYEBROW: esc(eyebrow),
+      EYEBROW: eyebrow ? `<p class="eyebrow hero__eyebrow">${esc(eyebrow)}</p>` : '',
       NAME: esc(fullName),
       TITULAR: esc(k.titular),
       LINKS: linksHtml,
       CV_BUTTON: cvButton,
+      AI_BUTTON: botonIa
+        ? `<button type="button" class="button button--ghost button--ai" data-copy-ai data-copied="${esc(t.copy_ai_done)}">${icon('copy')}<span data-copy-ai-label>${esc(t.copy_ai)}</span></button><span class="visually-hidden" aria-live="polite" data-copy-ai-status></span>`
+        : '',
     }, 'hero');
 
     const section = (id, num, cmd, title, body, extraClass = '') => {
@@ -1474,7 +1515,7 @@ async function main() {
       RECOMMENDATIONS: recommendations,
       CONTACT: contact,
       FOOTER: footer,
-      SCRIPTS: `<script src="${prefix}assets/site.js" defer></script>`,
+      SCRIPTS: `${botonIa ? `<script type="text/markdown" id="ai-profile">\n${scriptSafe(llmsMd(lang))}</script>\n` : ''}<script src="${prefix}assets/site.js" defer></script>`,
     }, `themes/${themeName}/index.html.tpl`);
     const rel = `${pagePath(lang)}index.html`;
     put(rel, html.replace(/\n{3,}/g, '\n\n'));
@@ -1489,7 +1530,7 @@ async function main() {
         THEME_CSS: css,
         ACCENT_CSS: accentStyle,
         AVATAR: photoDataUrl ? `<img class="avatar" src="${photoDataUrl}" alt="">` : `<span class="avatar avatar--initials">${esc(initialsOf(fullName))}</span>`,
-        EYEBROW: esc(eyebrow),
+        EYEBROW: eyebrow ? `<p class="eyebrow og__eyebrow">${esc(eyebrow)}</p>` : '',
         NAME: esc(fullName),
         TITULAR: esc(k.titular),
         LOGOS: stackCfg.map((s, i) => ({ ...s, svg: logos[i] })).filter((s) => s.svg).slice(0, 6).map((s) => `<span class="og__logo">${s.svg}</span>`).join(''),
@@ -1539,38 +1580,7 @@ async function main() {
     '',
   ].join('\n'));
   put('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${baseUrl}sitemap.xml\n`);
-  {
-    const lang = idiomas.includes('en') ? 'en' : idiomas[0];
-    const k = byLang[lang];
-    const t = i18n[lang];
-    const md = [`# ${fullName}`, ''];
-    if (k.titular) md.push(`> ${k.titular}`, '');
-    if (k.sobre_mi) md.push(...paragraphs(k.sobre_mi).map((p) => `${plain(p)}\n`));
-    if (cv.experience.length) {
-      md.push(`## ${t.nav.experience}`, '');
-      let ri = 0;
-      for (const co of cv.experience)
-        for (const r of co.roles) {
-          const tr = k.experiencia[ri++];
-          md.push(`- ${[tr?.rol || r.rol, co.empresa].filter(Boolean).join(', ')}${r.fechas || co.fechas ? ` (${localizeDates(r.fechas || co.fechas, lang, t.present)})` : ''}`);
-        }
-      md.push('');
-    }
-    if (k.proyectos.length) {
-      md.push(`## ${t.nav.projects}`, '');
-      k.proyectos.forEach((p, i) => {
-        const repo = str(cfg.proyectos[i].links?.repo) || str(cfg.proyectos[i].links?.demo);
-        md.push(`- ${repo ? `[${p.nombre}](${repo})` : p.nombre}: ${plain(p.descripcion)}`);
-      });
-      md.push('');
-    }
-    if (stackCfg.length) md.push(`## ${t.nav.stack}`, '', stackCfg.map((s) => s.name).join(', '), '');
-    md.push(`## ${t.links}`, '');
-    for (const l of idiomas) md.push(`- ${i18n[l].lang_name}: ${pageUrl(l)}`);
-    for (const l of links) md.push(`- ${l.label || t.contact[l.k]}: ${l.href ? l.href.replace(/^mailto:/, '') : l.text}`);
-    for (const [l, p] of Object.entries(pdfs)) md.push(`- ${t.download_cv} (${l}): ${baseUrl}${p.file}`);
-    put('llms.txt', `${md.join('\n').replace(/\n{3,}/g, '\n\n').trim()}\n`);
-  }
+  put('llms.txt', llmsMd(idiomas.includes('en') ? 'en' : idiomas[0]));
   put('.nojekyll', '');
   if (cfg.dominio) put('CNAME', `${str(cfg.dominio).toLowerCase()}\n`);
   for (const f of files.values()) if (!f.binary) f.data = String(f.data);

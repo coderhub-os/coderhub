@@ -22,7 +22,7 @@ html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
 <div class="og">
   <div class="og__media">{{AVATAR}}</div>
   <div class="og__body">
-    <p class="eyebrow og__eyebrow">{{EYEBROW}}</p>
+    {{EYEBROW}}
     <h1 class="og__name">{{NAME}}</h1>
     <p class="og__title">{{TITULAR}}</p>
     <div class="og__rule"></div>

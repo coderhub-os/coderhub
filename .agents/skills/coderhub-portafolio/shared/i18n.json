@@ -17,6 +17,8 @@
     },
     "present": "actualidad",
     "download_cv": "Descargar CV",
+    "copy_ai": "Copiar para IA",
+    "copy_ai_done": "¡Copiado!",
     "cv_lang": {
       "es": "(en español)",
       "en": "(en inglés)"
@@ -68,6 +70,8 @@
     },
     "present": "Present",
     "download_cv": "Download CV",
+    "copy_ai": "Copy for AI",
+    "copy_ai_done": "Copied!",
     "cv_lang": {
       "es": "(in Spanish)",
       "en": "(in English)"
