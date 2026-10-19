@@ -6,7 +6,8 @@
 // the .agents/skills/coderhub-* skills), the voice layer dropping out of
 // SYSTEM_PATHS, a coderhub-* skill dir not shipped by SYSTEM_PATHS (or claimed
 // by USER_PATHS) (A5), or the router `modes` block losing one of the 5 skills
-// or pointing at a SKILL.md that is missing or misnamed (D5b).
+// or pointing at a SKILL.md that is missing or misnamed (D5b), or a gh
+// issue/pr call in the sync workflow left without a target repo (A4).
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join, relative } from 'path';
 import { pathToFileURL } from 'url';
@@ -121,3 +122,20 @@ for (const [where, text] of Object.entries(visible)) {
 const { DEFAULT_USER_AGENT } = await import(pathToFileURL(join(ROOT, 'user-agent.mjs')).href);
 if (/coderhub/.test(DEFAULT_USER_AGENT) && !/career-ops/.test(DEFAULT_USER_AGENT)) pass('DEFAULT_USER_AGENT is coderhub');
 else fail(`DEFAULT_USER_AGENT is not coderhub: ${DEFAULT_USER_AGENT}`);
+
+// 6. A4 — every repo-scoped gh call in the sync workflow targets this fork.
+// gh resolves an untargeted call from the git remotes, and the sync checkout
+// has an `upstream` remote: that once filed issues on career-ops-hq/career-ops.
+const SYNC_WF = '.github/workflows/coderhub-sync.yml';
+const syncWf = read(SYNC_WF);
+const GH_REPO_LINE = /^ {2}GH_REPO: \$\{\{ github\.repository \}\}\s*$/m;
+const topEnv = (syncWf.match(/^env:\n((?: {2}.*\n|\s*\n)*)/m) || [null, ''])[1];
+const wfHasGhRepo = GH_REPO_LINE.test(topEnv);
+const ghRepoOverrides = syncWf.split('\n').filter((l) => /\bGH_REPO\s*[:=]/.test(l) && !/GH_REPO: \$\{\{ github\.repository \}\}/.test(l));
+const untargeted = syncWf.split('\n').map((l, i) => [i + 1, l])
+  .filter(([, l]) => /\bgh\s+(issue|pr)\b/.test(l) && !/^\s*#/.test(l))
+  .filter(([, l]) => !wfHasGhRepo && !/\s(--repo|-R)[\s=]/.test(l));
+if (ghRepoOverrides.length > 0) fail(`${SYNC_WF} sets GH_REPO to something other than github.repository (A4): ${ghRepoOverrides[0].trim()}`);
+else if (untargeted.length > 0) fail(`${SYNC_WF} has gh issue/pr calls with no target repo (A4), e.g. line ${untargeted[0][0]}`);
+else if (!/\bgh\s+(issue|pr)\b/.test(syncWf)) fail(`${SYNC_WF}: no gh issue/pr calls found; update this guard (A4)`);
+else pass(`${SYNC_WF}: every gh issue/pr call targets the fork`);

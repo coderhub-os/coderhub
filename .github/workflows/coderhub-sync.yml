@@ -29,6 +29,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  # Without this, gh picks its repo from the git remotes, and the `upstream`
+  # remote made it file issues on career-ops-hq/career-ops. Set once here so
+  # every gh call in every step, present or future, targets this fork.
+  GH_REPO: ${{ github.repository }}
   UPSTREAM_URL: https://github.com/career-ops-hq/career-ops.git
   SYNC_BRANCH: coderhub/sync-upstream
   BASE_BRANCH: next
