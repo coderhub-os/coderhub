@@ -16,8 +16,8 @@ console.log('\ndoctor.mjs — skill entrypoint stubs');
 
 const DOCTOR = join(ROOT, 'doctor.mjs');
 const POINTER = '../../../.agents/skills/career-ops/SKILL.md';
-const CLAUDE = '.claude/skills/career-ops/SKILL.md';
-const OPENCODE = '.opencode/skills/career-ops/SKILL.md';
+const CLAUDE = '.claude/skills/coderhub/SKILL.md'; // coderhub (D1c)
+const OPENCODE = '.opencode/skills/coderhub/SKILL.md'; // coderhub (D1c)
 
 function runDoctor(cwd) {
   try {

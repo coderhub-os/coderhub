@@ -13,7 +13,7 @@ import { join, relative } from 'path';
 import { pathToFileURL } from 'url';
 import { pass, fail, ROOT } from './helpers.mjs';
 import { extractArrayFromSource } from '../update-system.mjs';
-import { isNestedCheckout } from '../lib/mjs-files.mjs';
+import { listTree } from '../lib/walk-tree.mjs';
 
 console.log('\nCoderHub OS divergence guards');
 
@@ -22,11 +22,6 @@ const block = (text, name) => {
   const m = text.match(new RegExp(`coderhub:start ${name}\\b[\\s\\S]*?coderhub:end ${name}\\b`));
   return m ? m[0] : null;
 };
-const filesUnder = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-  const child = join(dir, e.name);
-  if (!e.isDirectory()) return [child];
-  return isNestedCheckout(child) ? [] : filesUnder(child);
-});
 const covers = (entry, path) => entry === path || (entry.endsWith('/') && `${path}/`.startsWith(entry));
 
 // 1. D1/D3/D7 — nothing that phones home may point at the upstream org.
@@ -105,7 +100,7 @@ visible['router (front matter)'] = (router.match(/^---\n[\s\S]*?\n---/) || [null
 if (!block(router, 'presentation')) fail('router lost the coderhub presentation block (D5)');
 visible['router (modes)'] = modes;
 for (const dir of coderhubSkills) {
-  for (const file of filesUnder(join(ROOT, dir))) visible[relative(ROOT, file)] = readFileSync(file, 'utf8');
+  for (const file of listTree(join(ROOT, dir))) visible[relative(ROOT, file)] = readFileSync(file, 'utf8');
 }
 const capa = block(agents, 'capa');
 if (!capa) fail('AGENTS.md lost the coderhub capa block (D4)');

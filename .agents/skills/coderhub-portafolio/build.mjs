@@ -28,6 +28,8 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, wri
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import * as yaml from 'js-yaml';
+import { isMainModule } from '../../../lib/is-main-module.mjs';
+import { getProfilePath } from '../../../path-resolver.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SHARED = join(HERE, 'shared');
@@ -49,8 +51,23 @@ function die(msg) {
   process.exit(1);
 }
 
+const USAGE = `Uso: node .agents/skills/coderhub-portafolio/build.mjs [opciones]
+
+  --root=<carpeta>    raíz del proyecto (default: sube desde el cwd hasta la carpeta con AGENTS.md y modes/)
+  --out=<carpeta>     dónde escribir el sitio (default: <root>/output/portafolio)
+  --theme=<tema>      pisa \`tema\` de portafolio.yml (${THEMES.join(', ')})
+  --mode=light|dark   fija el modo inicial (solo para capturas)
+  --dump-content      imprime el JSON del contenido EN (para coderhub-traducir) y sale
+  --no-og             no renderiza la imagen OG (build rápido, sin og:image)
+  --help, -h          muestra esta ayuda
+`;
+
 function parseArgs(argv) {
   const args = {};
+  if (argv.includes('--help') || argv.includes('-h')) {
+    process.stdout.write(USAGE);
+    process.exit(0);
+  }
   for (const a of argv) {
     const m = a.match(/^--([a-z-]+)(?:=(.*))?$/);
     if (!m) die(`argumento desconocido: ${a}`);
@@ -812,6 +829,9 @@ const digitsRx = (phone) => {
   return new RegExp(d.split('').join('[\\s().\\-]*'));
 };
 
+const EXTERNAL_SCRIPT_RX = /<script[^>]*\ssrc\s*=\s*["']?(https?:)?\/\//i;
+const REMOTE_STYLE_RX = /@import\s+url\(\s*["']?(https?:)?\/\/|<link[^>]+rel=["']?stylesheet[^>]+href=["']?(https?:)?\/\//i;
+
 /** Arma la lista de patrones prohibidos para el sitio. */
 function privacyRules({ profile, cfg, contacto, root, cvText, allowedText }) {
   const rules = [];
@@ -846,7 +866,7 @@ function privacyRules({ profile, cfg, contacto, root, cvText, allowedText }) {
   if (existsSync(pipe)) pipelineCompanies(readFileSync(pipe, 'utf8')).forEach((x) => companies.add(x));
   for (const co of companies) {
     if (co.length < 3 || cvLower.includes(co.toLowerCase())) continue;
-    const rx = new RegExp(`(^|[^\\p{L}\\p{N}])${co.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')}($|[^\\p{L}\\p{N}])`, 'iu');
+    const rx = new RegExp(`(^|[^\\p{L}\\p{N}])${escRx(co).replace(/\s+/g, '\\s+')}($|[^\\p{L}\\p{N}])`, 'iu');
     rules.push({ label: 'empresa del tracker/pipeline', test: (t) => rx.test(t), value: co });
   }
   for (const r of reportNames(root)) {
@@ -861,8 +881,8 @@ function privacyRules({ profile, cfg, contacto, root, cvText, allowedText }) {
   rules.push({ label: `"${upstream}"`, test: (t) => /career-?ops/i.test(t), value: upstream });
   rules.push({ label: '<form', test: (t) => /<form\b/i.test(t), value: '<form' });
   rules.push({ label: 'document.cookie', test: (t) => /document\.cookie/i.test(t), value: 'document.cookie' });
-  rules.push({ label: '<script src= externo', test: (t) => /<script[^>]*\ssrc\s*=\s*["']?(https?:)?\/\//i.test(t), value: '<script src=' });
-  rules.push({ label: 'recurso remoto (fuentes/CSS)', test: (t) => /@import\s+url\(\s*["']?(https?:)?\/\/|<link[^>]+rel=["']?stylesheet[^>]+href=["']?(https?:)?\/\//i.test(t), value: '@import/stylesheet remoto' });
+  rules.push({ label: '<script src= externo', test: (t) => EXTERNAL_SCRIPT_RX.test(t), value: '<script src=' });
+  rules.push({ label: 'recurso remoto (fuentes/CSS)', test: (t) => REMOTE_STYLE_RX.test(t), value: '@import/stylesheet remoto' });
   // proyectos[].links.docs acepta http:// (es un link de navegación, no un recurso): se exime ese href exacto.
   const docsHttp = (cfg.proyectos || []).map((p) => str(p?.links?.docs)).filter((u) => /^http:\/\//i.test(u));
   const dropDocs = (t) => docsHttp.reduce((acc, u) => acc.split(`href="${esc(u)}"`).join(''), t);
@@ -1046,7 +1066,7 @@ async function main() {
   if (args.theme !== undefined && !THEMES.includes(args.theme)) die(`--theme tiene que ser uno de ${THEMES.join(', ')}`);
 
   const cvPath = join(root, 'cv.md');
-  const profilePath = join(root, 'config', 'profile.yml');
+  const profilePath = getProfilePath(root);
   const cfgPath = join(root, 'config', 'portafolio.yml');
   if (!existsSync(cvPath)) die(`falta cv.md en ${root}: completá el onboarding primero`);
   if (!existsSync(profilePath)) die(`falta config/profile.yml en ${root}: completá el onboarding primero`);
@@ -1675,8 +1695,7 @@ function showEduAny(cfg, cv) {
   return cfg.secciones?.educacion !== false && cv.education.length > 0;
 }
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) {
+if (isMainModule(import.meta.url)) {
   main().catch((err) => {
     console.error(`coderhub-portafolio: error inesperado: ${err.stack || err.message}`);
     process.exit(1);

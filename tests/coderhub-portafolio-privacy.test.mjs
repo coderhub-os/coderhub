@@ -21,14 +21,14 @@
 //   - every theme and language has the "Copy for AI" button and its embedded
 //     markdown profile (same privacy scan, same text as llms.txt); boton_ia:
 //     false drops both; the terminal theme has no automatic stack eyebrow
-import { cpSync, existsSync, writeFileSync, mkdtempSync, readFileSync, readdirSync, statSync } from 'fs';
+import { cpSync, existsSync, writeFileSync, mkdtempSync, readFileSync, statSync } from 'fs';
 import { inflateSync } from 'zlib';
 import { pathToFileURL } from 'url';
 import { tmpdir } from 'os';
 import { dirname, join, relative, resolve, sep } from 'path';
 import * as yaml from 'js-yaml';
 import { chromium } from 'playwright';
-import { isNestedCheckout } from '../lib/mjs-files.mjs';
+import { listTree } from '../lib/walk-tree.mjs';
 import { pass, fail, run, lastRunFailure, rmSync, ROOT, NODE } from './helpers.mjs';
 
 console.log('\nCoderHub OS portafolio: privacy + links (coderhub-portafolio)');
@@ -42,11 +42,7 @@ const FIXTURE = join(ROOT, SKILL, 'examples', 'martin');
 const HAS_CHROMIUM = (() => { try { return existsSync(chromium.executablePath()); } catch { return false; } })();
 const BINARY = /\.(png|jpe?g|gif|webp|avif|ico|pdf|woff2?|ttf|otf)$/i;
 
-const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-  const child = join(dir, e.name);
-  if (!e.isDirectory()) return [child];
-  return isNestedCheckout(child) ? [] : walk(child);
-});
+const walk = (dir) => listTree(dir);
 
 /** Every scalar leaf of a YAML value, as strings. */
 const leaves = (v) => {

@@ -63,7 +63,7 @@ function linkTarget(p) {
   return text.length < 200 && /^[^\n]+SKILL\.md\s*$/.test(text) ? text.trim() : null;
 }
 const skillLinks = readdirSync(ROOT)
-  .map(d => join(d, 'skills', 'career-ops', 'SKILL.md'))
+  .map(d => join(d, 'skills', 'coderhub', 'SKILL.md')) // coderhub (D1c)
   .filter(p => linkTarget(p) !== null);
 const routers = new Set(skillLinks.map(p =>
   relative(ROOT, resolve(join(ROOT, dirname(p)), linkTarget(p))).split(sep).join('/')));
