@@ -13,6 +13,7 @@
  * - --json subtracts already-tracked companies (canonical-name + alias match,
  *   disabled entries count as tracked)
  * - --min-rows, --added-only, --since window (undated rows pass)
+ * - skipped_title rows are ignored (#2695)
  * - ranking: 'added'-producing companies rank first
  * - default YAML output is the `companies: [{name}]` shape discover-ats consumes
  *
@@ -55,16 +56,20 @@ function row({ url = 'https://boards.greenhouse.io/acme/jobs/1', seen = today, p
 }
 
 /** Run the script against scratch fixtures; return parsed stdout. */
-function run(historyRows, portalsObj, args, { parse = 'json' } = {}) {
+function run(historyRows, portalsObj, args, { parse = 'json', blacklist = null } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'discover-new-'));
   try {
     const hist = join(dir, 'scan-history.tsv');
     const portals = join(dir, 'portals.yml');
+    // Always point at a scratch blacklist path (absent unless given) so the
+    // user's real data/blacklist.md never leaks into these fixtures.
+    const blacklistPath = join(dir, 'blacklist.md');
     writeFileSync(hist, HEADER + historyRows.join('\n') + '\n');
     writeFileSync(portals, yaml.dump(portalsObj || {}));
+    if (blacklist !== null) writeFileSync(blacklistPath, blacklist);
     const out = execFileSync('node', [scriptPath, ...args], {
       encoding: 'utf-8', timeout: 20000, cwd: dirname(scriptPath),
-      env: { ...process.env, CAREER_OPS_SCAN_HISTORY: hist, CAREER_OPS_PORTALS: portals },
+      env: { ...process.env, CAREER_OPS_SCAN_HISTORY: hist, CAREER_OPS_PORTALS: portals, CAREER_OPS_BLACKLIST: blacklistPath },
     });
     return parse === 'json' ? JSON.parse(out) : out;
   } finally {
@@ -245,6 +250,24 @@ console.log('\n--- 3. Filters ---');
 }
 
 {
+  // #2695: scan.mjs records every title rejection as skipped_title. An
+  // aggregator board carries many employers, so those rows name untracked
+  // companies whose only postings are off-target; they are not candidates.
+  const history = [
+    row({ company: 'OffTarget', status: 'skipped_title' }),
+    row({ company: 'OffTarget', status: 'skipped_title' }),
+    row({ company: 'Mixed', status: 'skipped_title' }),
+    row({ company: 'Mixed', status: 'skipped_location' }),
+    row({ company: 'Mixed', status: 'skipped_location' }),
+  ];
+  const res = run(history, {}, ['--min-rows', '2', '--json']);
+  const names = res.companies.map((c) => c.name);
+  ok('skipped_title rows do not make a company a candidate', !names.includes('OffTarget'));
+  const mixed = res.companies.find((c) => c.name === 'Mixed');
+  ok('skipped_title rows do not count toward --min-rows', mixed?.rows === 2);
+}
+
+{
   // --since window: an old-dated company falls out; undated rows pass.
   const history = [
     row({ company: 'Ancient', seen: old }),
@@ -308,11 +331,32 @@ console.log('\n--- 6. Headerless legacy history ---');
     writeFileSync(portals, '{}\n');
     const out = execFileSync('node', [scriptPath, '--min-rows', '1', '--json'], {
       encoding: 'utf-8', timeout: 20000, cwd: dirname(scriptPath),
-      env: { ...process.env, CAREER_OPS_SCAN_HISTORY: hist, CAREER_OPS_PORTALS: portals },
+      env: { ...process.env, CAREER_OPS_SCAN_HISTORY: hist, CAREER_OPS_PORTALS: portals, CAREER_OPS_BLACKLIST: join(dir, 'blacklist.md') },
     });
     const names = JSON.parse(out).companies.map((c) => c.name).sort();
     eq('headerless file keeps its first company row', names, ['FirstRowCo', 'SecondCo']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+// ── 7. Blacklist ────────────────────────────────────────────────────────────
+console.log('\n--- 7. data/blacklist.md is subtracted ---');
+
+{
+  const BL = '| Company | Since | Scope | Reason |\n|---|---|---|---|\n'
+    + '| BannedCo | 2026-01-01 | company | culture |\n'
+    + '| banned-host.example | 2026-01-01 | domain | same |\n';
+  const rows = [
+    row({ company: 'BannedCo' }), row({ company: 'BannedCo' }),
+    // Name not listed, but one row sits on a domain-scope host: the whole company goes.
+    row({ company: 'HostOnlyCo', url: 'https://jobs.banned-host.example/1' }),
+    row({ company: 'HostOnlyCo', url: 'https://boards.greenhouse.io/hostonly/jobs/2' }),
+    row({ company: 'KeptCo' }), row({ company: 'KeptCo' }),
+  ];
+  const out = run(rows, {}, ['--json'], { blacklist: BL });
+  eq('blacklisted companies (name and domain scope) are not emitted', out.companies.map((c) => c.name), ['KeptCo']);
+  eq('metadata.blacklistedSkipped counts them', out.metadata.blacklistedSkipped, 2);
+  const none = run(rows, {}, ['--json']);
+  eq('no blacklist file → nothing skipped', none.metadata.blacklistedSkipped, 0);
 }

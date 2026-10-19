@@ -105,6 +105,10 @@ If yes:
 8. Show final status:
    > "✅ Updated to v{version}. Run `node doctor.mjs` anytime to verify setup, or `node verify-pipeline.mjs` to check your data."
 
+   If the updater printed `Update applied but NOT committed`, relay that complete block instead
+   of the plain success line: include the staged state, all three recovery options and their exact
+   commands, and the `--commit-on-branch` opt-in (#3846).
+
    <!-- coderhub:start banner (D7) -->
    If the updater's output ended with its CoderHub OS note, relay it once (do not drop it when summarizing):
    > "Novedades y tips de búsqueda laboral: https://www.instagram.com/ariel.mirra/"
@@ -122,7 +126,7 @@ If the user says "rollback" or runs `/coderhub update rollback`:
 
 ## Rules
 
-- NEVER auto-modify User Layer files during update (cv.md, config/profile.yml, data/, reports/, output/, interview-prep/, jds/, article-digest.md, portals.yml)
+- NEVER auto-modify User Layer files during update (cv.md, config/profile.yml, user files in data/, reports/, output/, interview-prep/, jds/, article-digest.md, portals.yml). The only exceptions are the exact system-owned `.gitkeep` scaffolds listed in `DATA_CONTRACT.md`; user files beside them remain unchanged.
 - `modes/_profile.md` is User Layer too: the compatibility check in Step 3 reads it strictly read-only
 - Exception: `modes/_profile.md` may be edited **only** in Step 4.7, and **only** after the user explicitly confirms each individual rename/removal. Never batch-edit without per-change consent.
 - User-specific customizations (archetypes, scoring weights, narrative) belong in `modes/_profile.md` or `config/profile.yml`, never in `modes/_shared.md`
@@ -130,5 +134,6 @@ If the user says "rollback" or runs `/coderhub update rollback`:
 <!-- coderhub:start hired-wall (D7) -->
 - Do not run `node hired-share.mjs` and do not mention the Hired Wall after an update. `AGENTS.md` → "Celebrating a hire (the Hired Wall)" explains why.
 <!-- coderhub:end hired-wall -->
+- Never trim the staged-but-uncommitted notice or its recovery commands (Step 4.8).
 - If anything goes wrong, tell the user to run `node update-system.mjs rollback`
 - Keep the output concise — users don't want walls of text during an update

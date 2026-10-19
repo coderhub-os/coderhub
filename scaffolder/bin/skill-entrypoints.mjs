@@ -13,10 +13,6 @@ export const SKILL_ENTRYPOINTS = [
     pointer: '../../../.agents/skills/career-ops/SKILL.md',
   },
   {
-    path: '.cursor/skills/coderhub/SKILL.md',
-    pointer: '../../../.agents/skills/career-ops/SKILL.md',
-  },
-  {
     path: '.opencode/skills/coderhub/SKILL.md',
     pointer: '../../../.agents/skills/career-ops/SKILL.md',
   },

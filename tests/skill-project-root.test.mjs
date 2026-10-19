@@ -10,7 +10,6 @@ const entrypoints = [
   ...[
     '.antigravitycli',
     '.claude',
-    '.cursor',
     '.grok',
     '.kimi',
     '.opencode',
