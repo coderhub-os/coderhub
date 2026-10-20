@@ -66,7 +66,7 @@ if (plan.hostFlagSupplied) {
     );
   }
 } else {
-  console.error(`career-ops web: binding ${plan.bindHost} — loopback only.`);
+  console.error(`coderhub web: binding ${plan.bindHost} — loopback only.`); // coderhub (D20)
 }
 
 // next's declared entry, not the private dist path: node_modules/.bin/next is a

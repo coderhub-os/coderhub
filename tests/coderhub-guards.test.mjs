@@ -7,7 +7,8 @@
 // SYSTEM_PATHS, a coderhub-* skill dir not shipped by SYSTEM_PATHS (or claimed
 // by USER_PATHS) (A5), or the router `modes` block losing one of the 5 skills
 // or pointing at a SKILL.md that is missing or misnamed (D5b), or a gh
-// issue/pr call in the sync workflow left without a target repo (A4).
+// issue/pr call in the sync workflow left without a target repo (A4), or the
+// web UI dropping out of SYSTEM_PATHS or losing its brand (D20).
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join, relative } from 'path';
 import { pathToFileURL } from 'url';
@@ -25,7 +26,7 @@ const block = (text, name) => {
 const covers = (entry, path) => entry === path || (entry.endsWith('/') && `${path}/`.startsWith(entry));
 
 // 1. D1/D3/D7 — nothing that phones home may point at the upstream org.
-for (const rel of ['update-system.mjs', 'user-agent.mjs', 'modes/update.md']) {
+for (const rel of ['update-system.mjs', 'user-agent.mjs', 'modes/update.md', 'web/src/components/beta/beta-banner.tsx', 'web/src/lib/report/report.ts']) {
   if (read(rel).includes('career-ops-hq')) fail(`${rel} references career-ops-hq (D1/D3/D7 reverted?)`);
   else pass(`${rel} does not reference career-ops-hq`);
 }
@@ -59,6 +60,16 @@ for (const dir of coderhubSkills) {
   if (!systemPaths.some((e) => covers(e, dir))) fail(`${dir} is not covered by SYSTEM_PATHS (A5): clients would never get it`);
   else if (user.length > 0) fail(`${dir} is claimed by USER_PATHS (${user.join(', ')}) (A5): the updater would skip it`);
   else pass(`${dir} is shipped by SYSTEM_PATHS`);
+}
+
+// 3d. D20 — the web UI ships to clients and shows the CoderHub OS brand.
+if (!systemPaths.includes('web/')) fail("web/ is not in SYSTEM_PATHS (D20): apply would stop updating the web UI");
+else pass('web/ is shipped by SYSTEM_PATHS');
+const WEB_BRAND = ['web/src/app/layout.tsx', 'web/src/components/app-shell.tsx', 'web/src/components/mobile-nav.tsx', 'scripts/ui-server.mjs'];
+for (const rel of WEB_BRAND) {
+  const text = read(rel);
+  if (!text.includes('CoderHub OS') || /[Cc]areer-ops (Local Web UI|Web Server|UI\.\.\.)|>career-ops<|title: "career-ops/.test(text)) fail(`${rel} lost the CoderHub OS brand (D20)`);
+  else pass(`${rel} shows the CoderHub OS brand`);
 }
 
 // 3c. D5b — the router `modes` block maps the 5 coderhub skills to SKILL.md files that exist.

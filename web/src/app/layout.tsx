@@ -8,11 +8,13 @@ import { readFollowupsEnabled } from "@/lib/followups-server";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "career-ops — official web experience",
-  description: "The official, local-first web experience for career-ops.",
+  // coderhub:start web-brand (D20)
+  title: "CoderHub OS",
+  description: "The local-first web experience for CoderHub OS.",
+  // coderhub:end web-brand
   // Home-screen / standalone (iOS): let our theme-color flow up to the status bar
   // + Dynamic Island; safe-area insets handle the layout.
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "career-ops" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "CoderHub OS" }, // coderhub (D20)
 };
 
 export const viewport: Viewport = {

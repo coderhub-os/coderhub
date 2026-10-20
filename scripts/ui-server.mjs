@@ -105,7 +105,7 @@ try {
 
 // Print header banner
 console.log("\x1b[1m\x1b[36m=====================================================\x1b[0m");
-console.log("\x1b[1m\x1b[36m             Career-ops Local Web UI                \x1b[0m");
+console.log("\x1b[1m\x1b[36m              CoderHub OS Local Web UI               \x1b[0m"); // coderhub (D20)
 console.log("\x1b[1m\x1b[36m=====================================================\x1b[0m\n");
 
 // Resolve data root canonically
@@ -144,7 +144,7 @@ const urlHost = rawUrlHost.includes(":") && !rawUrlHost.startsWith("[") ? `[${ra
 
 const url = `http://${urlHost}:${port}`;
 
-console.log("\n\x1b[1mStarting Career-ops Web Server...\x1b[0m");
+console.log("\n\x1b[1mStarting CoderHub OS Web Server...\x1b[0m"); // coderhub (D20)
 console.log(`\x1b[32mWeb UI:\x1b[0m \x1b[4m\x1b[34m${url}\x1b[0m\n`);
 console.log("Press \x1b[1mCtrl+C\x1b[0m to stop.\n");
 
@@ -220,7 +220,7 @@ function cleanup() {
   if (shuttingDown) return;
   shuttingDown = true;
   polling = false;
-  console.log("\nShutting down Career-ops UI...");
+  console.log("\nShutting down CoderHub OS UI..."); // coderhub (D20)
   if (child && !child.killed && child.exitCode === null) {
     if (isWindows) {
       try {

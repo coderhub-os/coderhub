@@ -193,6 +193,7 @@ const SYSTEM_PATHS = [
   'modes/_shared.md',
   'modes/_writing.md',
   'modes/_coderhub.md', // coderhub: capa de voz (A#)
+  'web/', // coderhub (D20): la web UI también se actualiza
   'modes/_profile.template.md',
   'modes/_custom.template.md',
   'modes/_brief.template.md',
@@ -5415,6 +5416,18 @@ async function apply() {
     } catch {
       console.log('npm install skipped (may need manual run)');
     }
+    // coderhub:start web-deps (D20)
+    // web/ ships through SYSTEM_PATHS here, so a client who installed the web
+    // UI's own dependencies gets them refreshed along with its code. Without
+    // node_modules the UI was never set up, and there is nothing to refresh.
+    if (existsSync(join(ROOT, 'web', 'node_modules'))) {
+      try {
+        execSync('npm --prefix web install --silent', { cwd: ROOT, timeout: NPM_INSTALL_TIMEOUT_MS });
+      } catch {
+        console.log('web UI npm install skipped (run: npm --prefix web ci)');
+      }
+    }
+    // coderhub:end web-deps
 
     // 5b. Ensure Playwright browser binary is up to date after npm install
     try {
