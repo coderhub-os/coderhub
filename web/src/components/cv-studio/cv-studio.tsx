@@ -16,7 +16,7 @@ type SaveState = { kind: "idle" } | { kind: "saving" } | { kind: "saved"; pdf: s
 
 const REASONS: Record<string, { title: string; body: string }> = {
   "no-tailored-cv": { title: "No tailored CV yet", body: "Generate a tailored CV from the report page first. The Studio opens it for review once it exists." },
-  "unreadable-layout": { title: "This CV layout is not supported yet", body: "The Studio reads CVs built from the career-ops templates. Open the PDF from the report page instead." },
+  "unreadable-layout": { title: "This CV layout is not supported yet", body: "The Studio reads CVs built from the CoderHub OS templates. Open the PDF from the report page instead." },
   "no-report": { title: "Report not found", body: "There is no evaluation report with this number." },
 };
 

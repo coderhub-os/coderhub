@@ -17,7 +17,7 @@ export async function postCoreScript(opts: {
 }): Promise<NextResponse> {
   if (!fs.existsSync(rootScript(opts.script))) {
     return NextResponse.json(
-      { error: `${opts.logLabel} needs the career-ops scripts`, code: "core-script-missing" },
+      { error: `${opts.logLabel} needs the CoderHub OS scripts`, code: "core-script-missing" },
       { status: 503 },
     );
   }

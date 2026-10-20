@@ -1,4 +1,4 @@
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown } from "lucide-react"; // coderhub (D20)
 
 // Transparency = our differentiator ("why it's a 4.0 for YOU"). The wording is
 // the CANONICAL public text from career-ops.org/methodology + /docs — rendered
@@ -28,13 +28,13 @@ export function ScoreMethodology() {
   return (
     <details className="group mt-10 overflow-hidden rounded-2xl border border-border bg-surface/30">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-3.5 text-sm font-medium transition-colors hover:bg-surface-hover">
-        How career-ops scored this — and why it&apos;s for <span className="text-landing">you</span>
+        How CoderHub OS scored this — and why it&apos;s for <span className="text-landing">you</span>
         <ChevronDown className="ml-auto size-4 text-faint transition-transform group-open:rotate-180" />
       </summary>
       <div className="space-y-5 border-t border-border px-5 py-4 text-sm">
         <p className="text-muted">
           Every role is scored <strong className="text-foreground">1.0–5.0</strong> across six dimensions.{" "}
-          <strong className="text-brand">4.0</strong> is the apply / don&apos;t-apply line — below it, career-ops
+          <strong className="text-brand">4.0</strong> is the apply / don&apos;t-apply line — below it, CoderHub OS
           recommends against applying.
         </p>
         <div>
@@ -60,15 +60,7 @@ export function ScoreMethodology() {
             ))}
           </ul>
         </div>
-        <a
-          href="https://career-ops.org/methodology"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Full methodology (opens in a new tab)"
-          className="inline-flex min-h-[24px] items-center gap-1 text-xs text-brand transition-colors hover:underline max-sm:min-h-[44px]"
-        >
-          Full methodology <ExternalLink className="size-3" aria-hidden="true" />
-        </a>
+        {/* coderhub (D20): no link to the upstream site */}
       </div>
     </details>
   );

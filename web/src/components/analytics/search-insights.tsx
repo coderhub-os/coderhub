@@ -41,7 +41,7 @@ export function SearchInsights() {
     return (
       <Empty
         title="Pattern analysis isn't available"
-        body="This needs analyze-patterns.mjs in the career-ops checkout. Everything else on this page still works."
+        body="This needs analyze-patterns.mjs in the CoderHub OS checkout. Everything else on this page still works."
       />
     );
   }

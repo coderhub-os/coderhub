@@ -40,7 +40,7 @@ export function OnboardingBanner() {
   if (dismissed || !d || !d.onboardingNeeded) return null;
   const items = d.missing.map((m) => LABELS[m] ?? m);
   const kickoff =
-    `Help me finish setting up career-ops. I still need to add ${items.join(", ")} — walk me through just those, conversationally, and write the files for me. Don't ask me for anything that's already set up (for example, don't ask for my CV if it's already saved).`;
+    `Help me finish setting up CoderHub OS. I still need to add ${items.join(", ")} — walk me through just those, conversationally, and write the files for me. Don't ask me for anything that's already set up (for example, don't ask for my CV if it's already saved).`;
 
   return (
     <div className="dot-bg relative mb-6 overflow-hidden rounded-2xl border border-brand/30 bg-gradient-to-br from-brand/10 via-surface/40 to-transparent p-5">

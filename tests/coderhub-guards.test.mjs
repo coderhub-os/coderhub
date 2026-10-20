@@ -26,7 +26,7 @@ const block = (text, name) => {
 const covers = (entry, path) => entry === path || (entry.endsWith('/') && `${path}/`.startsWith(entry));
 
 // 1. D1/D3/D7 — nothing that phones home may point at the upstream org.
-for (const rel of ['update-system.mjs', 'user-agent.mjs', 'modes/update.md', 'web/src/components/beta/beta-banner.tsx', 'web/src/lib/report/report.ts']) {
+for (const rel of ['update-system.mjs', 'user-agent.mjs', 'modes/update.md']) {
   if (read(rel).includes('career-ops-hq')) fail(`${rel} references career-ops-hq (D1/D3/D7 reverted?)`);
   else pass(`${rel} does not reference career-ops-hq`);
 }
@@ -65,6 +65,24 @@ for (const dir of coderhubSkills) {
 // 3d. D20 — the web UI ships to clients and shows the CoderHub OS brand.
 if (!systemPaths.includes('web/')) fail("web/ is not in SYSTEM_PATHS (D20): apply would stop updating the web UI");
 else pass('web/ is shipped by SYSTEM_PATHS');
+if (/<BetaBanner\b/.test(read('web/src/components/app-shell.tsx'))) fail('app-shell.tsx renders BetaBanner again (D20): its Report a bug opens issues on another repo');
+else pass('the web UI renders no Report a bug pill');
+// Visible text in web/src never says "career-ops". Skipped: comment lines, test
+// files, identifiers (`@/lib/career-ops` imports, `career-ops:*` storage keys,
+// `.career-ops-web`, `CAREER_OPS_*`), the upstream repo constant of the
+// unrendered Report a bug pill, and the OS scheduler ids, which the
+// install/uninstall scripts in web/scripts must match byte for byte.
+const WEB_ID = /\.career-ops-web|CAREER_OPS_|career-ops:[a-z]|career-ops-[a-z]|@\/lib\/career-ops"|"\.\/career-ops"|career-ops recurring scan|io\.career-ops\.scheduled-scan|"career-ops-hq\/career-ops"/g;
+const webLeaks = [];
+for (const file of listTree(join(ROOT, 'web', 'src'), { match: /\.(tsx?|mjs)$/ })) {
+  if (/\.test\./.test(file)) continue;
+  readFileSync(file, 'utf8').split('\n').forEach((line, i) => {
+    if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
+    if (/career[- ]ops/i.test(line.replace(WEB_ID, ''))) webLeaks.push(`${relative(ROOT, file)}:${i + 1}`);
+  });
+}
+if (webLeaks.length) fail(`web UI text says "career-ops" (D20): ${webLeaks.join(', ')}`);
+else pass('web UI text never says "career-ops"');
 const WEB_BRAND = ['web/src/app/layout.tsx', 'web/src/components/app-shell.tsx', 'web/src/components/mobile-nav.tsx', 'scripts/ui-server.mjs'];
 for (const rel of WEB_BRAND) {
   const text = read(rel);

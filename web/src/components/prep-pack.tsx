@@ -34,7 +34,7 @@ export function PrepPack({ report, company }: { report: string; company: string 
         </ol>
         <p className="mt-4 text-xs text-muted">
           Pair each question with a STAR story from your Interview Plan. For drafted answers and a company brief, run{" "}
-          <code className="text-foreground">/career-ops interview-prep</code> for {company || "this role"} in your AI CLI.
+          <code className="text-foreground">/coderhub interview-prep</code> for {company || "this role"} in your AI CLI.
         </p>
       </div>
     </details>

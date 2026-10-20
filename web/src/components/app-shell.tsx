@@ -13,7 +13,7 @@ import { PipelineProvider } from "@/components/pipeline/pipeline-provider";
 import { ApplyProvider } from "@/components/apply/apply-provider";
 import { ExploreProvider } from "@/components/explore/explore-provider";
 import { FirstScoreView } from "@/components/explore/first-score-view";
-import { BetaBanner } from "@/components/beta/beta-banner";
+// coderhub (D20): no BetaBanner import, the "Report a bug" pill is not rendered.
 import { WorkerPills } from "@/components/jobs/worker-pills";
 import { UsageMeter } from "@/components/usage-meter";
 import { instrumentSerif } from "@/lib/fonts";
@@ -81,7 +81,7 @@ export function AppShell({ children, followupsEnabled }: { children: React.React
         <AssistantConsole />
         <BackToTop />
         <FirstScoreView />
-        <BetaBanner />
+        {/* coderhub (D20): no "Report a bug" pill */}
       </div>
       </ExploreProvider>
       </ApplyProvider>

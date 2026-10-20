@@ -67,7 +67,7 @@ export function PortalsView({ watched }: { watched: WatchedCompany[] }) {
 
       {res && !res.available && !res.error && (
         <p className="mt-4 rounded-xl border border-dashed border-border bg-surface/30 p-4 text-sm text-muted">
-          <code className="text-foreground">verify-portals.mjs</code> not found — this needs a complete career-ops
+          <code className="text-foreground">verify-portals.mjs</code> not found — this needs a complete CoderHub OS
           checkout (the web orchestrates the core&apos;s validator).
         </p>
       )}

@@ -98,7 +98,7 @@ test("buildPrompt: an unknown kind falls through to the evaluate prompt", () => 
   // When building its prompt
   // Then it is the evaluation prompt (the documented default), not an empty string
   const prompt = buildPrompt({ kind: "some-future-kind", ...ARGS });
-  assert.match(prompt, /OFFICIAL career-ops job evaluation/);
+  assert.match(prompt, /OFFICIAL CoderHub OS job evaluation/ /* coderhub (D20) */);
 });
 
 test("buildPrompt: memory is injected only when non-empty", () => {
