@@ -11,7 +11,7 @@
 // introduced without anyone deciding it should be there. Pin it.
 
 // coderhub:start ua (D3)
-export const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; coderhub/1.0)';
+export const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; coderhub/1.0; +https://github.com/coderhub-os/coderhub)';
 // coderhub:end ua
 
 /**

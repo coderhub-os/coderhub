@@ -48,10 +48,8 @@ test('no provider hardcodes a User-Agent literal', () => {
   );
 });
 
-// coderhub:start ua-test (D3)
-// CoderHub's UA names coderhub and carries no URL (see .github/DIVERGENCIAS.md, D3).
-test('the shared User-Agent identifies coderhub', async () => {
+test('the shared User-Agent identifies career-ops and carries a contact URL', async () => {
   const { DEFAULT_USER_AGENT } = await import(pathToFileURL(join(ROOT, 'user-agent.mjs')).href);
-  assert.match(DEFAULT_USER_AGENT, /coderhub/, 'the default UA names the product');
+  assert.match(DEFAULT_USER_AGENT, /coderhub/, 'the default UA names the product'); // coderhub (D3)
+  assert.match(DEFAULT_USER_AGENT, /\+https?:\/\//, 'the default UA carries a URL a site owner can follow');
 });
-// coderhub:end ua-test
