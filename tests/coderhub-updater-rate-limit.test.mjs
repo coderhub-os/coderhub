@@ -15,7 +15,13 @@
 //   - resolveTargetRef() names the limit and the reset time when it throws
 //   - curlAuthPlan() sends the token to api.github.com only, via stdin
 //   - readGhToken() is '' when gh is missing or logged out
-import { pass, fail } from './helpers.mjs';
+//   - check still prints its status when curl dies before reading stdin (EPIPE)
+import { mkdtempSync, writeFileSync, mkdirSync, copyFileSync, rmSync } from 'fs';
+import { spawnSync } from 'child_process';
+import { tmpdir } from 'os';
+import { join, delimiter } from 'path';
+import { pass, fail, ROOT } from './helpers.mjs';
+import { gitIn } from '../update-system.mjs';
 import { checkStatus, resolveTargetRef, curlAuthPlan, readGhToken } from '../update-system.mjs';
 
 console.log('\nCoderHub OS updater: GitHub rate limit + gh token (D19)');
@@ -125,4 +131,46 @@ for (const [url, token, label] of [
   const multi = readGhToken(() => 'two words\n');
   if (multi === '') pass('output that is not a single token is ignored');
   else fail(`odd output → ${JSON.stringify(multi)}`);
+}
+
+// ── 7. check survives a curl that exits before reading its stdin ──
+// The token travels to curl over stdin. A curl that fails at once (no network,
+// blocked, missing) closes that pipe first, and on Linux the write is EPIPE: an
+// unhandled 'error' event on stdin killed check before it printed a status.
+// POSIX only: the doubles are shell scripts.
+if (process.platform === 'win32') {
+  pass('check vs. a curl that exits early: skipped on Windows (shell-script doubles)');
+} else {
+  for (const [label, ghScript] of [
+    ['gh logged out', '#!/bin/sh\nexit 1\n'],
+    ['gh with a token', '#!/bin/sh\necho gho_faketoken\n'],
+  ]) {
+    const dir = mkdtempSync(join(tmpdir(), 'co-epipe-'));
+    try {
+      writeFileSync(join(dir, 'VERSION'), '1.0.0\n');
+      gitIn(dir, 'init', '-q', '-b', 'main', '.');
+      gitIn(dir, 'config', 'user.email', 'test@example.com');
+      gitIn(dir, 'config', 'user.name', 'Test');
+      gitIn(dir, 'config', 'core.hooksPath', join(dir, 'no-such-hooks'));
+      gitIn(dir, 'add', '-A');
+      gitIn(dir, 'commit', '-qm', 'initial');
+      const script = join(dir, 'update-system.mjs');
+      copyFileSync(join(ROOT, 'update-system.mjs'), script);
+      const bin = join(dir, 'fake-bin');
+      mkdirSync(bin);
+      writeFileSync(join(bin, 'curl'), '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+      writeFileSync(join(bin, 'gh'), ghScript, { mode: 0o755 });
+      const env = { ...process.env, PATH: `${bin}${delimiter}${process.env.PATH}` };
+      let status = null;
+      let res = null;
+      for (let i = 0; i < 5 && status !== 'bad'; i++) {
+        res = spawnSync(process.execPath, [script, 'check'], { cwd: dir, encoding: 'utf-8', env });
+        try { status = JSON.parse(res.stdout.trim()).status; } catch { status = 'bad'; }
+      }
+      if (status === 'offline') pass(`check prints its status when curl exits before reading stdin (${label})`);
+      else fail(`check printed no status (${label}): ${String(res.stderr).split('\n').find((l) => /Error/.test(l)) || res.stdout}`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
 }

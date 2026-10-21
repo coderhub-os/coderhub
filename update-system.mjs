@@ -3738,7 +3738,13 @@ function curlGet(url, extraArgs = []) {
       }
     );
     // coderhub:start gh-token-auth-stdin (D19)
-    child.stdin?.end(auth.stdin ?? '');
+    // Only when there is a token to hand over, and tolerating a curl that exits
+    // before reading it: on Linux that write is EPIPE, and an unhandled 'error'
+    // event on stdin killed the whole check before it printed anything.
+    if (auth.stdin !== null) {
+      child.stdin?.on('error', () => {});
+      child.stdin?.end(auth.stdin);
+    }
     // coderhub:end gh-token-auth-stdin
   });
 }
