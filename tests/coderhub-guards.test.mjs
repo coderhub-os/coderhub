@@ -5,7 +5,7 @@
 // AGENTS.md blocks, the router's front matter and `modes` block, every file of
 // the .agents/skills/coderhub-* skills), the voice layer dropping out of
 // SYSTEM_PATHS, a coderhub-* skill dir not shipped by SYSTEM_PATHS (or claimed
-// by USER_PATHS) (A5), or the router `modes` block losing one of the 5 skills
+// by USER_PATHS) (A5), or the router `modes` block losing one of the 6 skills
 // or pointing at a SKILL.md that is missing or misnamed (D5b), or a gh
 // issue/pr call in the sync workflow left without a target repo (A4), or the
 // web UI dropping out of SYSTEM_PATHS or losing its brand (D20).
@@ -83,6 +83,24 @@ for (const file of listTree(join(ROOT, 'web', 'src'), { match: /\.(tsx?|mjs)$/ }
 }
 if (webLeaks.length) fail(`web UI text says "career-ops" (D20): ${webLeaks.join(', ')}`);
 else pass('web UI text never says "career-ops"');
+
+// 3e. D21 — /coderhub panel tells the client to run upstream's launcher; if the
+// launcher, its flags, its install step or the Node floor move, the skill is stale.
+const panel = read(`${SKILLS}/coderhub-panel/SKILL.md`);
+const pkgJson = JSON.parse(read('package.json'));
+const webPkg = JSON.parse(read('web/package.json'));
+const uiServer = read('scripts/ui-server.mjs');
+const nodeFloor = (webPkg.engines?.node || '').match(/>=\s*(\d+\.\d+)/)?.[1];
+const panelDrift = [];
+if (!/scripts\/ui-server\.mjs/.test(pkgJson.scripts?.ui || '')) panelDrift.push('package.json no longer has an `ui` script that runs scripts/ui-server.mjs');
+for (const flag of ['--port', '--no-open']) if (!uiServer.includes(flag)) panelDrift.push(`scripts/ui-server.mjs lost ${flag}`);
+if (!/let port = 3000;/.test(uiServer)) panelDrift.push('scripts/ui-server.mjs default port is no longer 3000');
+if (!nodeFloor) panelDrift.push('web/package.json has no `engines.node >=X.Y`');
+else if (!panel.includes(`Node ${nodeFloor}`)) panelDrift.push(`the skill does not say Node ${nodeFloor}, the web/package.json floor`);
+if (!read('docs/WEB_UI.md').includes('npm --prefix web ci')) panelDrift.push('docs/WEB_UI.md no longer installs with `npm --prefix web ci`');
+for (const cmd of ['npm --prefix web ci', 'npm run ui', '--port=3030', '--no-open', 'http://127.0.0.1:3000']) if (!panel.includes(cmd)) panelDrift.push(`the skill lost \`${cmd}\``);
+if (panelDrift.length) fail(`coderhub-panel is out of sync with the web UI launcher (D21): ${panelDrift.join('; ')}`);
+else pass('coderhub-panel matches the web UI launcher (script, flags, port, Node floor, install)');
 const WEB_BRAND = ['web/src/app/layout.tsx', 'web/src/components/app-shell.tsx', 'web/src/components/mobile-nav.tsx', 'scripts/ui-server.mjs'];
 for (const rel of WEB_BRAND) {
   const text = read(rel);
@@ -93,7 +111,7 @@ for (const rel of WEB_BRAND) {
 // 3c. D5b — the router `modes` block maps the 5 coderhub skills to SKILL.md files that exist.
 const router = read('.agents/skills/career-ops/SKILL.md');
 const modes = block(router, 'modes');
-const MODE_SKILLS = ['coderhub-linkedin', 'coderhub-readme-github', 'coderhub-banner', 'coderhub-traducir', 'coderhub-portafolio'];
+const MODE_SKILLS = ['coderhub-linkedin', 'coderhub-readme-github', 'coderhub-banner', 'coderhub-traducir', 'coderhub-portafolio', 'coderhub-panel'];
 if (!modes) fail('router lost the coderhub modes block (D5b)');
 else {
   for (const name of MODE_SKILLS) {
