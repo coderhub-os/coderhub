@@ -43,7 +43,7 @@ export function HeroGlow() {
   return (
     <GrainGradient
       className="absolute inset-0 z-0 animate-fade-in-delayed"
-      colors={dark ? ["#D5742E", "#9c2f05", "#7A2A0000"] : ["#f6c89a", "#e8a35f", "#D5742E00"]}
+      colors={dark ? ["#0099FF", "#0A3A6B", "#0A162800"] : ["#bfe3ff", "#6cc4ff", "#0099FF00"]} // coderhub (D22)
       colorBack="#00000000"
       softness={1}
       intensity={dark ? 0.42 : 0.26}

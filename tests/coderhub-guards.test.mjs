@@ -8,7 +8,7 @@
 // by USER_PATHS) (A5), or the router `modes` block losing one of the 6 skills
 // or pointing at a SKILL.md that is missing or misnamed (D5b), or a gh
 // issue/pr call in the sync workflow left without a target repo (A4), or the
-// web UI dropping out of SYSTEM_PATHS or losing its brand (D20).
+// web UI dropping out of SYSTEM_PATHS or losing its brand or palette (D20/D22).
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join, relative } from 'path';
 import { pathToFileURL } from 'url';
@@ -67,6 +67,12 @@ if (!systemPaths.includes('web/')) fail("web/ is not in SYSTEM_PATHS (D20): appl
 else pass('web/ is shipped by SYSTEM_PATHS');
 if (/<BetaBanner\b/.test(read('web/src/components/app-shell.tsx'))) fail('app-shell.tsx renders BetaBanner again (D20): its Report a bug opens issues on another repo');
 else pass('the web UI renders no Report a bug pill');
+// D22 — the web UI wears the CoderHub palette (override block at the end of globals.css).
+const webCss = block(read('web/src/app/globals.css'), 'web-colors');
+if (!webCss || !/--color-brand:\s*#0099ff/i.test(webCss)) fail('web/src/app/globals.css lost the CoderHub web-colors block (D22)');
+else pass('the web UI keeps the CoderHub palette');
+if (!/id="isotipo"/.test(read('web/src/app/icon.svg'))) fail('web/src/app/icon.svg is not the CoderHub isotipo (D22)');
+else pass('the web UI icon is the CoderHub isotipo');
 // Visible text in web/src never says "career-ops". Skipped: comment lines, test
 // files, identifiers (`@/lib/career-ops` imports, `career-ops:*` storage keys,
 // `.career-ops-web`, `CAREER_OPS_*`), the upstream repo constant of the

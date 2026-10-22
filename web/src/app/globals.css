@@ -323,3 +323,45 @@ html.dark .co-cost[data-tone="free"]{color:hsl(158 64% 60%);background:hsl(158 6
 .co-cost[data-tone="spend"]{color:hsl(35 9% 34%);background:hsl(35 8% 46% / .12);border-color:hsl(35 8% 46% / .26)}
 html.dark .co-cost[data-tone="spend"]{color:hsl(35 8% 70%);background:hsl(35 6% 60% / .12);border-color:hsl(35 6% 60% / .24)}
 .co-cost svg{width:.85em;height:.85em}
+
+/* coderhub:start web-colors (D22) */
+/* CoderHub palette (brand_context/visual-system.md): navy + vibrant blue. Only
+   overrides the tokens above (same selectors, later in the file), so a sync that
+   touches the upstream block above merges clean. Contrast (AA): #0070c0 on white
+   5.15, #0099ff on #0a1628 6.04, #0a1628 on #0099ff 6.04. */
+@theme {
+  --color-brand: #0099ff;
+  --color-brand-200: #27b2ff; /* hover / lighter */
+  --color-brand-foreground: #0a1628; /* navy on the brand blue (white is 3.0:1, fails AA) */
+  --color-brand-soft: rgba(0, 153, 255, 0.12);
+  --color-brand-secondary: #27b2ff;
+}
+
+:root {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface-hover: #e8eef6;
+  --border: #d5dee9;
+  --fg: #0a1628;
+  --muted: #3f5068; /* 7.6:1 on --bg */
+  --faint: #55667d; /* 5.3:1 on --bg */
+  --landing: #0f1b2d;
+  --brand-text: #0070c0; /* darkened brand for small text: 5.2 on white */
+  --dot: 215 25% 45% / 0.10;
+  --pre-bg: #edf2f8;
+}
+
+.dark {
+  --bg: #0a1628; /* navy deep */
+  --surface: #0f1b2d; /* navy */
+  --surface-hover: #14243b; /* navy elevation 1 */
+  --border: #1b2e47; /* navy elevation 2 */
+  --fg: #f5f8fc;
+  --muted: #a3b2c7;
+  --faint: #8b9bb0; /* 5.4:1 on --surface */
+  --landing: #e6eef8;
+  --brand-text: #0099ff; /* 6.0:1 on --bg */
+  --dot: 215 30% 70% / 0.10;
+  --pre-bg: #08111f;
+}
+/* coderhub:end web-colors */
