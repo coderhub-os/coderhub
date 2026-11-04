@@ -72,6 +72,95 @@ La primera vez te guía por todo: instala lo que falte (`npm install`, Chromium 
 
 **En Claude Code:** Sonnet con esfuerzo medio alcanza. Nombrá la sesión con `/rename CoderHub OS`; si se te apaga la compu, `claude --resume "CoderHub OS"` te deja donde estabas.
 
+## Qué hacer en cada caso
+
+Todo arranca con `/coderhub`. Si no sabés por dónde empezar, escribí lo que te pasa en lenguaje natural ("me llegó esta oferta", "me agendaron una entrevista") y te lleva al modo correcto.
+
+### Me llegó una oferta (JD)
+
+Pegá la URL o el texto de la oferta en el chat. Sin comando extra: lo detecta y corre el pipeline.
+
+```
+/coderhub https://empresa.com/jobs/123
+```
+
+Qué pasa:
+
+1. Chequea que la oferta siga abierta y no sea ghost job ni estafa.
+2. La puntúa contra tu CV real (bloques A-H) y te dice si vale la pena. Debajo de 4.0/5 te desaconseja postular.
+3. Si vale la pena, deja el reporte en `reports/`, el CV adaptado en PDF en `output/` y la fila en el tracker.
+
+Después, según lo que quieras:
+
+| Querés | Corré |
+| ------ | ----- |
+| Solo la evaluación, sin armar el PDF | `/coderhub oferta` |
+| Solo el CV adaptado | `/coderhub pdf` |
+| Cover letter | `/coderhub cover` |
+| Comparar varias ofertas y quedarte con la mejor | `/coderhub ofertas` |
+| Saber a quién escribirle (recruiter o hiring manager) con el mensaje listo | `/coderhub contacto` |
+| Investigar la empresa a fondo antes de postular | `/coderhub deep` |
+
+### Quiero postularme
+
+```
+/coderhub apply
+```
+
+Abrí el formulario de la empresa. `apply` lee la página con un navegador visible (Playwright, el Chromium que instaló el setup), carga el reporte y el CV adaptado de esa oferta y **completa los campos por vos**: datos, preguntas abiertas, sueldo pretendido. Antes de completar chequea que la oferta siga viva, que no te hayas postulado ya por otro canal y que no haya preguntas eliminatorias (visa, título, piso salarial) que tengas que decidir vos.
+
+Llega hasta el último paso. **El clic en Submit es tuyo**: revisás todo lo que cargó y mandás. Es a propósito: una respuesta inventada en una postulación se paga cara, y el sistema nunca manda nada en tu nombre. Si no podés usar el navegador, pasale una captura o pegale las preguntas y te arma las respuestas para copiar.
+
+Si preferís postular por mail: `/coderhub email` deja el borrador, nunca lo envía.
+
+### Me agendaron una entrevista
+
+Pasale todo lo que tengas y pedí la prep:
+
+```
+/coderhub interview-prep
+```
+
+Pegale en el mismo mensaje:
+
+- La **JD** (o la URL, si nunca la evaluaste).
+- El **mail o la invitación** de la entrevista: fecha, hora, plataforma, tipo de ronda.
+- Los **nombres de los entrevistadores**, con su LinkedIn o el texto de su perfil si lo tenés. Los perfila (cargo, antigüedad, qué te van a preguntar según su trayectoria) y marca quién probablemente decide.
+- Notas de un coffee chat con alguien de la empresa, si hiciste uno.
+
+Te devuelve: research de la empresa, cómo suele ser el proceso, desglose ronda por ronda, preguntas probables según quién entrevista (recruiter, hiring manager, técnico), tus historias STAR mapeadas a cada una, checklist técnico y preguntas para hacerles de vuelta. Queda guardado en `interview-prep/`.
+
+El resto del ciclo:
+
+| Momento | Corré |
+| ------- | ----- |
+| Tenés poco tiempo y querés un plan por horas | `/coderhub interview/plan` (pide JD, fecha y hora, entrevistadores) |
+| Querés ensayar | `/coderhub interview/practice` (una pregunta por vez, con feedback) |
+| Terminó la entrevista | `/coderhub interview/debrief` (qué preguntaron, qué salió bien, qué reforzar antes de la próxima ronda) |
+| Te hicieron una oferta o te mandaron un contrato | `/coderhub offer-prep` (lectura del contrato y análisis de sueldo, no es asesoramiento legal) |
+| No te contestan | `/coderhub followup` |
+
+### Quiero más ofertas
+
+```
+/coderhub scan
+```
+
+Busca ofertas nuevas en tus portales (`portals.yml`: más de 100 empresas precargadas, más Ashby, Greenhouse, Lever y otros) y las suma a `data/pipeline.md`. Después:
+
+1. `/coderhub pipeline` evalúa todas las pendientes de una vez.
+2. Mirá el ranking con `/coderhub tracker` o `npm run serve:dashboard`.
+
+Si salen pocas, el problema suele ser la búsqueda, no el mercado:
+
+| Problema | Qué hacer |
+| -------- | --------- |
+| Te faltan títulos para buscar | `/coderhub titles`: propone roles afines a tu CV (el mismo trabajo se llama distinto en cada empresa) |
+| Una empresa que te interesa no está en la lista | Pedile que la sume. `/coderhub discover` busca su portal y la deja lista para el scan |
+| Encontraste ofertas por tu cuenta (LinkedIn, referidos) | Sumalas a `data/pipeline.md` (o pedile que las sume) y corré `/coderhub pipeline` |
+| Te rechazan seguido | `/coderhub patterns`: te dice por qué y cómo ajustar el target |
+| Siempre te falta lo mismo | `/coderhub expand`: competencias que podés sumar al CV |
+
 ## Uso
 
 En los CLIs que registran slash commands (Claude Code, OpenCode, Cursor, Qwen y otros):
