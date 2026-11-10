@@ -42,6 +42,7 @@ Reformula tu CV; nunca tiene que inventarlo. Hoy esa regla vive en los prompts, 
 | **Scanner de portales**  | 100+ empresas precargadas y búsquedas en Ashby, Greenhouse, Lever, Wellfound y más                                                      |
 | **Seguimiento**          | Tracker de postulaciones, cadencia de follow-ups y clasificación de respuestas de las empresas                                          |
 | **Entrevistas y ofertas** | Plan de preparación, práctica con feedback, debrief post-entrevista, lectura de contratos y análisis de sueldo                        |
+| **Workbook de las lecciones** | El ejercicio de cada lección de Skool, en el chat: arranca de lo que ya sabe de vos, te pregunta lo que falta y guarda cada respuesta donde la usan tus CVs, tus ofertas y tus entrevistas |
 
 ## Instalación
 
@@ -186,6 +187,7 @@ En los CLIs que registran slash commands (Claude Code, OpenCode, Cursor, Qwen y 
 /coderhub followup    → Follow-ups vencidos y borradores
 /coderhub patterns    → Por qué te rechazan y cómo ajustar el target
 /coderhub offer-prep  → Lectura de una oferta o contrato que te llegó (no es asesoramiento legal)
+/coderhub leccion 1-3 → El ejercicio de una lección de Skool (/coderhub workbook: tu progreso)
 /coderhub update      → Actualiza CoderHub OS con vista previa de los cambios
 ```
 

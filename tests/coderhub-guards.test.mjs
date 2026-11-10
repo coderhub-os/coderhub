@@ -5,7 +5,7 @@
 // AGENTS.md blocks, the router's front matter and `modes` block, every file of
 // the .agents/skills/coderhub-* skills), the voice layer dropping out of
 // SYSTEM_PATHS, a coderhub-* skill dir not shipped by SYSTEM_PATHS (or claimed
-// by USER_PATHS) (A5), or the router `modes` block losing one of the 6 skills
+// by USER_PATHS) (A5), or the router `modes` block losing one of the coderhub skills
 // or pointing at a SKILL.md that is missing or misnamed (D5b), or a gh
 // issue/pr call in the sync workflow left without a target repo (A4), or the
 // web UI dropping out of SYSTEM_PATHS or losing its brand or palette (D20/D22).
@@ -114,10 +114,10 @@ for (const rel of WEB_BRAND) {
   else pass(`${rel} shows the CoderHub OS brand`);
 }
 
-// 3c. D5b — the router `modes` block maps the 5 coderhub skills to SKILL.md files that exist.
+// 3c. D5b — the router `modes` block maps the coderhub skills to SKILL.md files that exist.
 const router = read('.agents/skills/career-ops/SKILL.md');
 const modes = block(router, 'modes');
-const MODE_SKILLS = ['coderhub-linkedin', 'coderhub-readme-github', 'coderhub-banner', 'coderhub-traducir', 'coderhub-portafolio', 'coderhub-panel'];
+const MODE_SKILLS = ['coderhub-linkedin', 'coderhub-readme-github', 'coderhub-banner', 'coderhub-traducir', 'coderhub-portafolio', 'coderhub-panel', 'coderhub-workbook'];
 if (!modes) fail('router lost the coderhub modes block (D5b)');
 else {
   for (const name of MODE_SKILLS) {
