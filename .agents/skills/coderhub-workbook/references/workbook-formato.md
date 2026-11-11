@@ -41,7 +41,7 @@ Una sección `##` por lección, en orden de número (insertala en su lugar, no a
 **Dónde:** startup o corpo técnica. "Quiero aprender rápido y en una corpo me aburro."
 **Beneficios:** remoto, cursos, horario flexible
 
-**Llevado a CoderHub OS:** `config/profile.yml` (compensation.minimum, compensation.target_range), `modes/_profile.md` (Company preferences)
+**Llevado a CoderHub OS:** `config/profile.yml` (compensation.minimum, compensation.target_range), `modes/_profile.md` (Comp Targets, Company preferences)
 ```
 
 - El marcador `<!-- workbook:X-Y estado:… fecha:YYYY-MM-DD -->` va siempre en la línea siguiente al título. Estados: `en-curso`, `accion-pendiente`, `hecha`.

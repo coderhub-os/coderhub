@@ -43,7 +43,7 @@ Contrastar el stack propio contra el roadmap del rol.
 
 **Regla de calidad:** "lo domino" = lo usaste en un proyecto o trabajo, no "vi un curso". Si en 3 aparecen más de 5 temas, pedí que elija los 3 que más pesan para el rol.
 
-**Destinos:** 1 → `target_roles.primary` y `target_roles.archetypes` (si cambió). 2 y 3 → `modes/_profile.md` → `### Skills and gaps`.
+**Destinos:** 1 → `target_roles.primary` y `target_roles.archetypes` (si cambió), y `modes/_profile.md` → `## Your Target Roles` (ver `destinos.md`). 2 y 3 → `modes/_profile.md` → `### Skills and gaps`.
 
 **Habilita:** `/coderhub upskill` cruza estos gaps con lo que piden las ofertas que evaluaste. Es imprescindible antes de la primera 1:1 con el mentor. Próxima: 1-3.
 
@@ -62,7 +62,7 @@ Expectativas económicas y laborales.
 **Regla de calidad:** la banda tiene tres números distintos y en orden (mín < justo < aspiracional). Si el aspiracional es más del doble del actual, preguntá en qué se basa (no lo bajes vos: que lo justifique). El "por qué" de 4 tiene que ser del cliente.
 
 **Destinos:**
-- 2 y 3 → `compensation.minimum`, `compensation.target_range`, `compensation.currency`.
+- 2 y 3 → `compensation.minimum`, `compensation.target_range`, `compensation.currency` (montos sin moneda ni período: ver `destinos.md`), y la línea `Target range:` de `modes/_profile.md` → `## Your Comp Targets`.
 - 5 (remoto, ubicación) → `compensation.location_flexibility`.
 - 1, 4 y 5 → `modes/_profile.md` → `### Company preferences` (el sueldo actual marcado como privado).
 

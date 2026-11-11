@@ -131,6 +131,27 @@ else {
   }
 }
 
+// 3f. D23 — the workbook writes comp amounts and _profile.md sections in the
+// shapes upstream reads. If a sync changes the salary parser or the section
+// headings doctor checks, update coderhub-workbook/references/destinos.md.
+{
+  const { parseAmount } = await import(pathToFileURL(join(ROOT, 'providers/_salary-text.mjs')).href);
+  const range = parseAmount('3,200-4,000');
+  const min = parseAmount('2,500');
+  if (range?.min === 3200 && range?.max === 4000 && min?.mid === 2500) pass('parseAmount reads the workbook comp format (D23)');
+  else fail(`parseAmount no longer reads the workbook comp format "3,200-4,000" / "2,500" (D23): got ${JSON.stringify(range)} / ${JSON.stringify(min)}`);
+  const { SECTIONS } = await import(pathToFileURL(join(ROOT, 'lib/personalization.mjs')).href);
+  const headings = SECTIONS.map((s) => s.heading);
+  for (const h of ['## Your Target Roles', '## Your Comp Targets']) {
+    if (headings.includes(h)) pass(`personalization still checks "${h}" (D23)`);
+    else fail(`lib/personalization.mjs no longer checks "${h}"; the workbook writes there (D23)`);
+  }
+  const destinos = read(`${SKILLS}/coderhub-workbook/references/destinos.md`);
+  for (const h of ['## Your Target Roles', '## Your Comp Targets']) {
+    if (!destinos.includes(h)) fail(`coderhub-workbook destinos.md does not mention "${h}" (D23)`);
+  }
+}
+
 // 4. Client-visible surfaces carry no "career-ops".
 const visible = {};
 for (const name of readdirSync(ROOT).filter((f) => /^README[\w.-]*\.md$/.test(f))) {

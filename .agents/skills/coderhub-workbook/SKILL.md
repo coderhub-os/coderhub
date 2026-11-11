@@ -87,11 +87,12 @@ Si la ficha tiene **destinos**, armá la propuesta en una tabla y esperá el OK.
 
 | # | Archivo | Cambio | Valor |
 |---|---|---|---|
-| 1 | `config/profile.yml` | `compensation.minimum` (vacío → nuevo) | `"USD 2.500"` |
-| 2 | `config/profile.yml` | `compensation.target_range` (antes: `"USD 3K"`) | `"USD 3.200-4.000"` |
-| 3 | `interview-prep/story-bank.md` | historia nueva | `[Debugging] Migración que rompió prod` |
+| 1 | `config/profile.yml` | `compensation.minimum` (vacío → nuevo) | `"2,500"  # USD/month` |
+| 2 | `config/profile.yml` | `compensation.target_range` (antes: `"$3K/month"`) | `"3,200-4,000"  # USD/month` |
+| 3 | `modes/_profile.md` | `## Your Comp Targets` → línea `Target range:` | `3,200-4,000 USD/month (fair–aspirational). Minimum: 2,500 USD/month.` |
+| 4 | `interview-prep/story-bank.md` | historia nueva | `[Debugging] Migración que rompió prod` |
 
-*"Aplico los 3, elegís cuáles, o ninguno?"*
+*"Aplico los 4, elegís cuáles, o ninguno?"*
 
 - Seguí **al pie de la letra** el formato de cada archivo en `references/destinos.md`. Los lectores de esos archivos (scripts y modos) dependen de ese formato.
 - **Nunca pises** un valor que ya existe sin mostrar el antes y el después.
