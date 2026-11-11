@@ -67,6 +67,19 @@ Los parches en código van entre marcadores `coderhub:start <nombre>` / `coderhu
 - **`.gitignore` no se reconcilia en el salto desde v1.2.1 (visto 2026-10-22 en el piloto):** `apply` corre con el updater viejo del cliente, que ya importa los módulos nuevos (`tracker-utils.mjs`, `path-resolver.mjs`) con los archivos reemplazados. La reconciliación falla (`rawTrackerPath` / `js-yaml`) y el updater avisa "Could not reconcile .gitignore"; el resto del update queda bien. El `.gitignore` del cliente queda sin 19 reglas nuevas (`/.career-ops-data`, `.next/`, `web/.next/`, `.career-ops.env`, etc.). Con v2.0.0 ya instalado no se repite. Arreglo manual: con el updater nuevo, `reconcileGitignore(local, upstream)` (exportada por `update-system.mjs`) y guardar el resultado. Es comportamiento de upstream; no se parchea el updater viejo, que ya está en los clientes.
 - **Rate limit sin `gh`:** un cliente sin `gh` logueado sigue con 60 pedidos por hora por IP. En una red compartida puede quedarse sin cuota; desde D19 se entera (`rate-limited`) en vez de no saber nada. `--channel main` (`checkMainChannel`) no distingue el rate limit: sigue diciendo `offline`.
 
+## Entorno de desarrollo y piloto
+
+Las rutas son las mismas en todas las máquinas de Ariel:
+
+| Qué | Ruta | Repo |
+|---|---|---|
+| Template (este repo, donde se codea) | `~/DEV/coderhub` | `coderhub-os/coderhub` (público) |
+| Piloto (instancia real de Ariel) | `~/DEV/coderhub-ariel-mirra` | `coderhub-os/coderhub-ariel-mirra` (privado) |
+
+- **Toda prueba, feature nueva o release se prueba primero en el piloto**, con `/coderhub update` desde ahí (ver el paso 7 de la receta de release). Nunca en el repo de un cliente, y nunca con datos reales dentro del template.
+- Los datos del piloto no están en git: `cv.md`, `config/profile.yml`, `data/`, `reports/`, `output/`, `portals.yml`, `modes/_profile.md` y `.career-ops-web/`. Viven solo en el disco de cada máquina. Para pasarlos a otra Mac: `tar` de esa lista, clonar el piloto en la misma ruta y descomprimir adentro.
+- En el template, `config/`, `data/`, `reports/` y `output/` solo pueden tener datos de prueba descartables.
+
 ## Sync con upstream
 
 El job `coderhub-sync.yml` (A4) hace los pasos 1 a 4 cada viernes y deja un PR. A mano:
