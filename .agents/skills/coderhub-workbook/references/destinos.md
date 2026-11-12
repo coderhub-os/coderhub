@@ -117,6 +117,7 @@ Cada historia es un bloque `### ` bajo `## Stories`, exactamente así:
 - `**A (Action):**` es obligatorio: sin eso `npm run star` no ve la historia.
 - Un campo por línea. Sin tablas, sin `#`/`##` y sin bloques de código dentro de una historia.
 - `**Provenance:**` va solo si **el cliente confirmó los números** de la historia, con exactamente `user-stated YYYY-MM-DD`. Si dijo que no puede confirmarlos: `user-cannot-confirm`. Si la historia no tiene números, no pongas la línea. Nada después del valor.
+- `**Best for questions about:**` en inglés, con 6-10 palabras sueltas que incluyan **los sinónimos que usan los entrevistadores**: `conflict, disagreement, pushback, stakeholder, negotiation, tradeoff`. `npm run star` puntúa por coincidencia exacta de palabras y esta línea pesa más que el resto; como el cuerpo de la historia suele estar en español, es lo único que matchea con una pregunta en inglés. Con solo `conflict`, la pregunta "Tell me about a disagreement with another team" no encuentra la historia (probado 2026-11-12).
 - `[Theme]`: una palabra o dos en inglés (`[Failure]`, `[Conflict]`, `[Achievement]`, `[Pressure]`, `[Teamwork]`, `[Learning]`).
 
 ## `data/contacts.tsv`

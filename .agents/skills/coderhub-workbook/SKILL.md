@@ -113,7 +113,7 @@ Con `/coderhub leccion X-Y listo`: preguntá cómo le fue con lo que dice la che
 Con `/coderhub workbook`:
 
 1. Si no existe `data/workbook.md`: *"Todavía no arrancaste el workbook. Cada lección de Skool termina con un ejercicio: lo hacés acá con `/coderhub leccion 1-1`, y lo que respondas lo uso para tus CVs y tus entrevistas."* y ofrecé arrancar.
-2. Si existe: mostrá la tabla de progreso por módulo (hechas / pendientes / acciones pendientes), la **próxima lección sugerida** y, si hay, **qué funciones están frenadas** por ejercicios que faltan. Ejemplo: *"Sin la 1-3 no tengo tu banda salarial: las ofertas se puntúan sin tu rango."*
+2. Si existe: contá desde los marcadores `<!-- workbook:X-Y estado:… -->`, no de memoria. Son **30** lecciones con ejercicio, y "hechas" son solo las de `estado:hecha` (`accion-pendiente` y `en-curso` no cuentan). Mostrá la tabla de progreso por módulo (hechas / pendientes / acciones pendientes), la **próxima lección sugerida** y, si hay, **qué funciones están frenadas** por ejercicios que faltan. Ejemplo: *"Sin la 1-3 no tengo tu banda salarial: las ofertas se puntúan sin tu rango."*
 
 **Orden sugerido.** El de Skool (1-1 → 8-4), con una excepción: si el cliente ya está aplicando o tiene entrevistas, priorizá 1-3, 1-4, 6-2, 7-1 y 7-2 (son las que más mejoran las ofertas, los CVs y la preparación de entrevistas).
 
