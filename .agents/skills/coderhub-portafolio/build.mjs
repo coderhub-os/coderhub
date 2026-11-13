@@ -27,7 +27,7 @@ import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'fs';
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import * as yaml from 'js-yaml';
+import { loadYaml as parseYaml } from '../../../lib/yaml-document.mjs';
 import { isMainModule } from '../../../lib/is-main-module.mjs';
 import { getProfilePath } from '../../../path-resolver.mjs';
 
@@ -415,7 +415,7 @@ function findRoot(start) {
 
 function loadYaml(path, label) {
   try {
-    return yaml.load(readFileSync(path, 'utf8')) || {};
+    return parseYaml(readFileSync(path, 'utf8')) || {};
   } catch (err) {
     die(`no pude leer ${label}: ${err.message.split('\n')[0]}`);
   }

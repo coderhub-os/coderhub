@@ -41,9 +41,12 @@ const missingD1 = d1.filter((s) => !updater.includes(s));
 if (missingD1.length === 0) pass('update-system.mjs keeps the D1 repo and tag prefix');
 else fail(`update-system.mjs lost D1: ${missingD1.join(' | ')}`);
 
-// 3. SYSTEM_PATHS ships the CoderHub layer to clients.
+// 3. SYSTEM_PATHS ships the CoderHub layer to clients. Since upstream v1.40.0
+// (#5554) the list lives in lib/update-manifest.mjs; USER_PATHS stays in the updater.
+const manifest = read('lib/update-manifest.mjs');
+const systemPaths = extractArrayFromSource(manifest, 'SYSTEM_PATHS');
 if (!existsSync(join(ROOT, 'modes', '_coderhub.md'))) fail('modes/_coderhub.md is missing');
-else if (!updater.includes("'modes/_coderhub.md'")) fail('modes/_coderhub.md is not in SYSTEM_PATHS');
+else if (!systemPaths.includes('modes/_coderhub.md')) fail('modes/_coderhub.md is not in SYSTEM_PATHS (lib/update-manifest.mjs)');
 else pass('modes/_coderhub.md exists and is in SYSTEM_PATHS');
 
 // 3b. A5 — every .agents/skills/coderhub-* dir ships via SYSTEM_PATHS and is not user data.
@@ -51,9 +54,9 @@ const SKILLS = '.agents/skills';
 const coderhubSkills = readdirSync(join(ROOT, SKILLS), { withFileTypes: true })
   .filter((e) => e.isDirectory() && e.name.startsWith('coderhub-'))
   .map((e) => `${SKILLS}/${e.name}`);
-const systemPaths = extractArrayFromSource(updater, 'SYSTEM_PATHS');
 const userPaths = extractArrayFromSource(updater, 'USER_PATHS');
-if (systemPaths.length === 0 || userPaths.length === 0) fail('SYSTEM_PATHS or USER_PATHS not found in update-system.mjs');
+if (systemPaths.length === 0) fail('SYSTEM_PATHS not found in lib/update-manifest.mjs');
+if (userPaths.length === 0) fail('USER_PATHS not found in update-system.mjs');
 if (coderhubSkills.length === 0) fail(`no ${SKILLS}/coderhub-* skill dirs found (A5)`);
 for (const dir of coderhubSkills) {
   const user = userPaths.filter((e) => covers(e, dir) || e.startsWith(`${dir}/`));
@@ -78,7 +81,7 @@ else pass('the web UI icon is the CoderHub isotipo');
 // `.career-ops-web`, `CAREER_OPS_*`), the upstream repo constant of the
 // unrendered Report a bug pill, and the OS scheduler ids, which the
 // install/uninstall scripts in web/scripts must match byte for byte.
-const WEB_ID = /\.career-ops-web|CAREER_OPS_|career-ops:[a-z]|career-ops-[a-z]|@\/lib\/career-ops"|"\.\/career-ops"|career-ops recurring scan|io\.career-ops\.scheduled-scan|"career-ops-hq\/career-ops"/g;
+const WEB_ID = /\.career-ops-web|CAREER_OPS_|career-ops[:.][a-z]|career-ops-[a-z]|@\/lib\/career-ops"|"\.\/career-ops"|career-ops recurring scan|io\.career-ops\.scheduled-scan|"career-ops-hq\/career-ops"/g;
 const webLeaks = [];
 for (const file of listTree(join(ROOT, 'web', 'src'), { match: /\.(tsx?|mjs)$/ })) {
   if (/\.test\./.test(file)) continue;
@@ -96,12 +99,14 @@ const panel = read(`${SKILLS}/coderhub-panel/SKILL.md`);
 const pkgJson = JSON.parse(read('package.json'));
 const webPkg = JSON.parse(read('web/package.json'));
 const uiServer = read('scripts/ui-server.mjs');
-const nodeFloor = (webPkg.engines?.node || '').match(/>=\s*(\d+\.\d+)/)?.[1];
+// Every X.Y the range names (e.g. "^22.13.0 || >=23.4.0" → 22.13 and 23.4).
+const nodeFloors = [...(webPkg.engines?.node || '').matchAll(/(?:>=|\^|~)\s*(\d+\.\d+)/g)].map((m) => m[1]);
+const nodeFloor = nodeFloors.find((v) => !panel.includes(`Node ${v}`)) ?? nodeFloors[0];
 const panelDrift = [];
 if (!/scripts\/ui-server\.mjs/.test(pkgJson.scripts?.ui || '')) panelDrift.push('package.json no longer has an `ui` script that runs scripts/ui-server.mjs');
 for (const flag of ['--port', '--no-open']) if (!uiServer.includes(flag)) panelDrift.push(`scripts/ui-server.mjs lost ${flag}`);
 if (!/let port = 3000;/.test(uiServer)) panelDrift.push('scripts/ui-server.mjs default port is no longer 3000');
-if (!nodeFloor) panelDrift.push('web/package.json has no `engines.node >=X.Y`');
+if (!nodeFloor) panelDrift.push('web/package.json has no `engines.node` floor (>=X.Y or ^X.Y)');
 else if (!panel.includes(`Node ${nodeFloor}`)) panelDrift.push(`the skill does not say Node ${nodeFloor}, the web/package.json floor`);
 if (!read('docs/WEB_UI.md').includes('npm --prefix web ci')) panelDrift.push('docs/WEB_UI.md no longer installs with `npm --prefix web ci`');
 for (const cmd of ['npm --prefix web ci', 'npm run ui', '--port=3030', '--no-open', 'http://127.0.0.1:3000']) if (!panel.includes(cmd)) panelDrift.push(`the skill lost \`${cmd}\``);

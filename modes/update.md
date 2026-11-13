@@ -7,7 +7,7 @@ When the user runs `/coderhub update`, execute this interactive update flow.
 Run `node update-system.mjs check --force` and parse the JSON output. `--force` because the user asked: a release they said no to earlier is shown too.
 
 - If `up-to-date`: Tell the user "CoderHub OS is up to date (v{version})." and stop.
-- If `offline`: Tell the user "Cannot reach GitHub to check for updates. Either there is no connection, or GitHub's limit of 60 update checks per hour for this network was hit (it resets within the hour). Try again later." and stop.
+- If `offline`: Tell the user "Cannot reach GitHub to check for updates. Either there is no connection, or GitHub's limit of 60 update checks per hour for this network was hit (it resets within the hour). Try again later." and stop. If the JSON carries a `detail` field, show it verbatim after that sentence: it is a fixed-English diagnostic naming what failed (for example `ENOENT` when curl is not installed, or a proxy or TLS error), and that is what the user needs to fix it.
 <!-- coderhub:start rate-limited (D19) -->
 - If `rate-limited`: Tell the user "No pude chequear si hay actualizaciones: GitHub limita las consultas desde tu red. Se libera a las {resetAt en tu hora local, HH:MM}. Si instalás `gh` y corrés `gh auth login` una vez, las consultas usan tu cuenta y no te vuelve a pasar." and stop.
 <!-- coderhub:end rate-limited -->
@@ -75,9 +75,9 @@ Ask the user for confirmation:
 
 If yes:
 1. Capture the current commit as a run-specific pre-update baseline before apply runs, e.g. `PRE_UPDATE_REF=$(git rev-parse HEAD)`. Don't rely on `backup-pre-update-{local}` alone — `update-system.mjs apply` reuses that branch if it already exists, so it may point at an older snapshot.
-2. **Save local CLAUDE.md additions.** `update-system.mjs apply` treats CLAUDE.md as a system file and resets it to the two-line template (`@AGENTS.md` + the local-additions comment). Before applying, read the current CLAUDE.md and save everything after that two-line header — it will need to be restored in step 4 below. If CLAUDE.md has nothing beyond the two-line header, note that there is nothing to restore.
+2. **Save local CLAUDE.md additions.** CLAUDE.md is a system file. When this install has changed it, `apply` keeps the local version by default: it lists CLAUDE.md under "Keeping your versions" and writes `CLAUDE.md.bak`. It replaces CLAUDE.md with the two-line template (`@AGENTS.md` + the local-additions comment) only with `--force`, or when it does not see the change as a local edit. Before applying, read the current CLAUDE.md and save everything after that two-line header, so step 4 can put it back if apply replaced the file. If CLAUDE.md has nothing beyond the two-line header, note that there is nothing to restore.
 3. Run `node update-system.mjs apply --confirm`, capturing its exit code without stopping on failure yet — the restore in step 4 must run either way. The `--confirm` flag is required so scheduled checks can never install files silently.
-4. **Restore local CLAUDE.md additions**, regardless of whether step 3 succeeded or failed. `apply` resets CLAUDE.md before it can fail partway through, so a failed apply still leaves CLAUDE.md at the blank two-line template. Re-read CLAUDE.md and append the content saved in step 2 after the two-line header.
+4. **Restore local CLAUDE.md additions if apply removed them**, whether step 3 succeeded or failed. Re-read CLAUDE.md. If the content saved in step 2 is still in it, which is the default because `apply` kept your version, leave the file as it is: appending the content again would duplicate it, and every later update would add another copy. Only if the saved content is missing, append it after the two-line header.
 5. Now check the exit code captured in step 3:
    - If non-zero, treat apply as failed. Show the captured output and offer:
      > "⚠️ Update apply failed. Want me to show the full error, or try `/coderhub update rollback`?"
@@ -130,7 +130,7 @@ If the user says "rollback" or runs `/coderhub update rollback`:
 - `modes/_profile.md` is User Layer too: the compatibility check in Step 3 reads it strictly read-only
 - Exception: `modes/_profile.md` may be edited **only** in Step 4.7, and **only** after the user explicitly confirms each individual rename/removal. Never batch-edit without per-change consent.
 - User-specific customizations (archetypes, scoring weights, narrative) belong in `modes/_profile.md` or `config/profile.yml`, never in `modes/_shared.md`
-- CLAUDE.md's local additions (everything after the two-line `@AGENTS.md` header) MUST be saved before apply and restored immediately after — on both the success AND failure path (Step 4.2, Step 4.4). `update-system.mjs apply` resets CLAUDE.md before it can fail partway through, so a failed apply still needs the restore. `apply` has no awareness of this content and will silently discard it otherwise.
+- CLAUDE.md's local additions (everything after the two-line `@AGENTS.md` header) MUST be saved before apply and checked immediately after — on both the success AND failure path (Step 4.2, Step 4.4). Restore them only when they are no longer in CLAUDE.md. `apply` keeps a CLAUDE.md this install changed unless `--force` is given, and appending the saved content to a file that still has it duplicates the additions on every update.
 <!-- coderhub:start hired-wall (D7) -->
 - Do not run `node hired-share.mjs` and do not mention the Hired Wall after an update. `AGENTS.md` → "Celebrating a hire (the Hired Wall)" explains why.
 <!-- coderhub:end hired-wall -->
