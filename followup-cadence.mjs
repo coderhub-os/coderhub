@@ -14,9 +14,9 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname, relative, sep } from 'path';
 import { fileURLToPath } from 'url';
-import * as yaml from 'js-yaml';
+import { loadYaml } from './lib/yaml-document.mjs';
 import { loadCanonicalStates, foldStatusInput } from './tracker-utils.mjs';
-import { resolveColumns, parseTrackerRow } from './tracker-parse.mjs';
+import { resolveColumns, parseTrackerRow, firstLinkTarget } from './tracker-parse.mjs';
 import { getCareerOpsRoot, getProfilePath, resolveTrackerPath } from './path-resolver.mjs';
 import { localToday } from './lib/local-today.mjs';
 import { flagValue, validateFlags } from './lib/cli-flags.mjs';
@@ -29,7 +29,7 @@ const CODEBASE_ROOT = dirname(fileURLToPath(import.meta.url));
 const CAREER_OPS = getCareerOpsRoot();
 const APPS_FILE = resolveTrackerPath(CAREER_OPS);
 
-const FOLLOWUPS_FILE = join(CAREER_OPS, 'data/follow-ups.md');
+const FOLLOWUPS_FILE = process.env.CAREER_OPS_FOLLOWUPS || join(CAREER_OPS, 'data/follow-ups.md');
 const STATUS_LOG_FILE = join(dirname(APPS_FILE), 'status-log.tsv');
 const PROFILE_FILE = getProfilePath();
 
@@ -86,7 +86,7 @@ export function loadProfileCadence(profilePath = PROFILE_FILE) {
   if (!profilePath || !existsSync(profilePath)) return {};
   let raw;
   try {
-    raw = yaml.load(readFileSync(profilePath, 'utf-8')) || {};
+    raw = loadYaml(readFileSync(profilePath, 'utf-8')) || {};
   } catch {
     return {};
   }
@@ -105,7 +105,7 @@ export function loadProfileCadence(profilePath = PROFILE_FILE) {
 export function loadFollowupsEnabled(profilePath = PROFILE_FILE) {
   if (!profilePath || !existsSync(profilePath)) return true;
   try {
-    return yaml.load(readFileSync(profilePath, 'utf-8'))?.follow_ups?.enabled !== false;
+    return loadYaml(readFileSync(profilePath, 'utf-8'))?.follow_ups?.enabled !== false;
   } catch {
     return true;
   }
@@ -682,7 +682,7 @@ export function loadSelfIdentities(profilePath = PROFILE_FILE) {
   if (!profilePath || !existsSync(profilePath)) return new Set();
   let raw;
   try {
-    raw = yaml.load(readFileSync(profilePath, 'utf-8')) || {};
+    raw = loadYaml(readFileSync(profilePath, 'utf-8')) || {};
   } catch {
     return new Set();
   }
@@ -796,16 +796,25 @@ export function contactLabel(contact) {
 
 // --- Resolve report path ---
 export function resolveReportPath(reportField, appsFile = APPS_FILE, repoRoot = CAREER_OPS) {
-  const match = reportField.match(/\]\(([^)]+)\)/);
-  if (!match) return null;
-  // Report links in the tracker are normalized relative to the tracker file's
-  // own directory (see PR #760 — `merge-tracker.mjs --migrate`). Resolve against
-  // dirname(APPS_FILE), not the project root, otherwise relative paths like
-  // `../reports/...` (the data/applications.md layout) escape above the project.
-  const fullPath = join(dirname(appsFile), match[1]);
-  const repoRelative = relative(repoRoot, fullPath).split(sep).join('/');
-  if (repoRelative.startsWith('../') || repoRelative === '..' || !repoRelative.startsWith('reports/')) return null;
-  return existsSync(fullPath) ? repoRelative : null;
+  const target = firstLinkTarget(reportField);
+  if (target == null) return null;
+  // Two shapes name the same file. Writers emit a repo-root link,
+  // `(reports/file.md)`, and merge-tracker rewrites it relative to the tracker
+  // directory, `(../reports/file.md)` (PR #760). Try the tracker-relative path
+  // first. A link with no `..` segment is also tried from the repo root, which
+  // is where the unmigrated shape actually lives. A `..` segment is not given
+  // that second try, so the link cannot walk out of reports/.
+  const candidates = [join(dirname(appsFile), target)];
+  if (!target.startsWith('/') && !target.split(/[\\/]/).includes('..')) {
+    const fromRoot = join(repoRoot, target);
+    if (fromRoot !== candidates[0]) candidates.push(fromRoot);
+  }
+  for (const fullPath of candidates) {
+    const repoRelative = relative(repoRoot, fullPath).split(sep).join('/');
+    if (repoRelative.startsWith('../') || repoRelative === '..' || !repoRelative.startsWith('reports/')) continue;
+    if (existsSync(fullPath)) return repoRelative;
+  }
+  return null;
 }
 
 // --- Compute urgency ---
@@ -996,9 +1005,13 @@ export function analyzeFromContent(trackerContent, followupsContent = '', { enab
     });
   }
 
-  // Sort by urgency priority: urgent > overdue > waiting > cold
   const urgencyOrder = { urgent: 0, overdue: 1, waiting: 2, cold: 3 };
-  entries.sort((a, b) => (urgencyOrder[a.urgency] ?? 9) - (urgencyOrder[b.urgency] ?? 9));
+  const byPressure = (a, b) =>
+    (urgencyOrder[a.urgency] ?? 9) - (urgencyOrder[b.urgency] ?? 9)
+    || (a.daysUntilNext ?? Infinity) - (b.daysUntilNext ?? Infinity)
+    || b.daysSinceApplication - a.daysSinceApplication
+    || a.num - b.num;
+  entries.sort(byPressure);
 
   // Retired applications are counted but not listed — surfacing them in the
   // entries array would defeat the point of retiring them, and the count keeps

@@ -22,7 +22,7 @@ Solo lo que pregunte: Hoy (qué hacer, por score), Pipeline (tracker con filtros
 
 ## Paso 1 — Chequeos
 
-1. `node --version`. Hace falta **22.6 o más nuevo**. Si es menor: *"El panel necesita Node 22.6 o más nuevo y tenés {versión}. Actualizalo desde nodejs.org y volvemos."* y pará.
+1. `node --version`. Hace falta **Node 22.13 o más nuevo dentro de la 22, o Node 23.4 o más nuevo** (23.0 a 23.3 no sirven). Si no cumple: *"El panel necesita Node 22.13 o más nuevo (o 23.4 en adelante) y tenés {versión}. Actualizalo desde nodejs.org y volvemos."* y pará.
 2. Existe `web/package.json`. Si no: *"Tu instalación no trae el panel todavía. Corré `/coderhub update` y volvemos."* y pará.
 
 ## Paso 2 — Instalar (solo si falta)

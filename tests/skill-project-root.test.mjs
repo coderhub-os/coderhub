@@ -14,7 +14,14 @@ const entrypoints = [
     '.kimi',
     '.opencode',
     '.qwen',
-  ].map(dir => join(dir, 'skills', 'coderhub', 'SKILL.md')),
+  ].map(dir => join(dir, 'skills', 'coderhub', 'SKILL.md')), // coderhub (D1c)
+  // Marketplace directory bundles keep upstream's career-ops/ folder (D1c).
+  ...[
+    'claude-directory',
+    'openai-directory',
+    'cursor-directory',
+    'antigravity-directory',
+  ].map(dir => join(dir, 'skills', 'career-ops', 'SKILL.md')),
 ];
 
 function findProjectRoot(skillPath) {

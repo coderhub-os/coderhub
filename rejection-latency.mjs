@@ -48,11 +48,12 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import * as yaml from 'js-yaml';
+import { loadYaml } from './lib/yaml-document.mjs';
 
 import { parseActiveInterviews, findColumn } from './process-quality.mjs';
 import { resolveColumns, parseTrackerRow, normalizeTextKey } from './tracker-parse.mjs';
 import { isPlaceholderCompany } from './lib/placeholder-cell.mjs';
+import { companiesMatchIgnoringCorporateForm } from './tracker-utils.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 import { flagValue, hasFlag, validateFlags } from './lib/cli-flags.mjs';
 import { localToday } from './lib/local-today.mjs';
@@ -212,7 +213,7 @@ export function groupIdentity(company, via) {
 export function loadProfile(profilePath = PROFILE_FILE) {
   if (!profilePath || !existsSync(profilePath)) return {};
   try {
-    return yaml.load(readFileSync(profilePath, 'utf-8')) || {};
+    return loadYaml(readFileSync(profilePath, 'utf-8')) || {};
   } catch {
     return {};
   }
@@ -366,7 +367,10 @@ export function computeRejectionLatency(interviewRows, trackerByCompany, opts = 
 
     const role = findColumn(row, 'role').trim();
 
-    const companyRows = tracker.get(cKey);
+    const companyRows = tracker.get(cKey)
+      ?? [...tracker.values()]
+        .filter(group => companiesMatchIgnoringCorporateForm(company, group[0].company))
+        .flat();
     if (!companyRows || companyRows.length === 0) {
       // No tracker row still in Interview state for this company at all →
       // either a response was recorded (Responded/Offer/Rejected — nothing
@@ -689,7 +693,12 @@ if (isMainModule(import.meta.url)) {
     ? cliCourtesy
     : (Number.isFinite(profileCourtesy) && profileCourtesy > 0 ? profileCourtesy : DEFAULT_COURTESY_DAYS);
 
-  let today = new Date();
+  // The local day, the default computeRejectionLatency() documents. Passing
+  // `new Date()` bypassed it: that default applies only when no Date is
+  // given, and daysBetween() reads a Date's UTC day, so the CLI counted from
+  // the UTC day and flagged (or missed) a company a day early everywhere the
+  // two days differ.
+  let today = parseDate(localToday());
   if (cliToday) {
     const parsed = parseDate(cliToday);
     if (!parsed) {
