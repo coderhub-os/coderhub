@@ -76,6 +76,22 @@ if (!webCss || !/--color-brand:\s*#0099ff/i.test(webCss)) fail('web/src/app/glob
 else pass('the web UI keeps the CoderHub palette');
 if (!/id="isotipo"/.test(read('web/src/app/icon.svg'))) fail('web/src/app/icon.svg is not the CoderHub isotipo (D22)');
 else pass('the web UI icon is the CoderHub isotipo');
+// D22 — identity C type: Bricolage Grotesque and JetBrains Mono, vendored and
+// wired from the same block (a sync that drops the files or the tokens is caught).
+{
+  const fontDrift = [];
+  for (const [family, rel] of [
+    ['Bricolage Grotesque', 'web/src/assets/fonts/bricolage-grotesque/BricolageGrotesque-Latin-Variable.woff2'],
+    ['JetBrains Mono', 'web/src/assets/fonts/jetbrains-mono/JetBrainsMono-Latin-Variable.woff2'],
+  ]) {
+    if (!existsSync(join(ROOT, rel))) fontDrift.push(`${rel} is missing`);
+    if (!webCss || !webCss.includes(`font-family: "${family}"`)) fontDrift.push(`no @font-face for ${family} in the web-colors block`);
+  }
+  if (!webCss || !/--font-sans:\s*"Bricolage Grotesque"/.test(webCss)) fontDrift.push('--font-sans is not Bricolage Grotesque');
+  if (!webCss || !/--font-mono:\s*"JetBrains Mono"/.test(webCss)) fontDrift.push('--font-mono is not JetBrains Mono');
+  if (fontDrift.length) fail(`the web UI lost the identity C type (D22): ${fontDrift.join('; ')}`);
+  else pass('the web UI uses the identity C type (Bricolage Grotesque, JetBrains Mono)');
+}
 // Visible text in web/src never says "career-ops". Skipped: comment lines, test
 // files, identifiers (`@/lib/career-ops` imports, `career-ops:*` storage keys,
 // `.career-ops-web`, `CAREER_OPS_*`), the upstream repo constant of the
@@ -87,7 +103,8 @@ for (const file of listTree(join(ROOT, 'web', 'src'), { match: /\.(tsx?|mjs)$/ }
   if (/\.test\./.test(file)) continue;
   readFileSync(file, 'utf8').split('\n').forEach((line, i) => {
     if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
-    if (/career[- ]ops/i.test(line.replace(WEB_ID, ''))) webLeaks.push(`${relative(ROOT, file)}:${i + 1}`);
+    // Also "CareerOps" as a word (getCareerOpsRoot and other camelCase identifiers stay out).
+    if (/career[- ]ops|\bCareerOps\b/i.test(line.replace(WEB_ID, ''))) webLeaks.push(`${relative(ROOT, file)}:${i + 1}`);
   });
 }
 if (webLeaks.length) fail(`web UI text says "career-ops" (D20): ${webLeaks.join(', ')}`);

@@ -352,46 +352,194 @@ html.dark .co-cost[data-tone="spend"]{color:hsl(35 8% 70%);background:hsl(35 6% 
 .co-cost svg{width:.85em;height:.85em}
 
 /* coderhub:start web-colors (D22) */
-/* CoderHub palette (brand_context/visual-system.md): navy + vibrant blue. Only
-   overrides the tokens above (same selectors, later in the file), so a sync that
-   touches the upstream block above merges clean. Contrast (AA): #0070c0 on white
-   5.15, #0099ff on #0a1628 6.04, #0a1628 on #0099ff 6.04. */
+/* CoderHub identity C (decided 2026-11-15; source of truth:
+   agentic-os brand_context/visual-system.md, brand-kit/tokens.css and the
+   landing C). Everything CoderHub changes in the look of the UI lives in this
+   block, at the end of the file, so a sync that touches the upstream rules
+   above merges clean and this block still wins by order. Unlayered on purpose:
+   it beats Tailwind's layered utilities without !important.
+
+   Palette: navy #0A1628 / #0F1B2D, cold white #F2F6FB / #DCE6F2, blue #0099FF,
+   light blue #27B2FF, sky #7DD3FC. WCAG 2.x contrast (opacity mixed into the
+   background before measuring; full table in .github/DIVERGENCIAS.md, D22):
+     light  fg #0A1628 16.71 bg / 18.13 surface / 14.37 hover · muted #3D4756
+            8.66 / 9.40 / 7.45 · faint #5E6774 5.28 / 5.72 / 4.54 · brand-text
+            #0067B8 5.33 / 5.78 / 4.58 (the logo blue is never text on light: 2.76)
+     dark   fg #F2F6FB 16.71 bg / 15.93 surface / 13.68 hover · muted #BFC5CD
+            10.43 / 9.95 / 8.54 · faint #959CA7 6.55 / 6.25 / 5.37 · brand-text
+            #0099FF 6.04 / 5.76 / 4.95
+     button navy on blue 6.04, on light blue (hover) 7.68 · arrow #27B2FF on
+            the navy circle 7.68 · focus sky on navy 10.87, navy on cold white 16.71
+
+   Fonts (vendored latin subsets, SIL OFL 1.1, from Google Fonts on 2026-11-15):
+   Bricolage Grotesque for headings and text, JetBrains Mono for data and
+   labels, Instrument Serif italic (already vendored upstream) for one keyword. */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("../assets/fonts/bricolage-grotesque/BricolageGrotesque-Latin-Variable.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/jetbrains-mono/JetBrainsMono-Latin-Variable.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-brand: #0099ff;
   --color-brand-200: #27b2ff; /* hover / lighter */
-  --color-brand-foreground: #0a1628; /* navy on the brand blue (white is 3.0:1, fails AA) */
-  --color-brand-soft: rgba(0, 153, 255, 0.12);
-  --color-brand-secondary: #27b2ff;
+  --color-brand-foreground: #0a1628; /* navy on the brand blue: 6.04 (white would be 2.76, fails AA) */
+  --color-brand-soft: rgba(0, 153, 255, 0.14);
+  --color-brand-secondary: #7dd3fc; /* sky */
+
+  --font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :root {
-  --bg: #f4f7fb;
+  --bg: #f2f6fb; /* cold white */
   --surface: #ffffff;
-  --surface-hover: #e8eef6;
-  --border: #d5dee9;
-  --fg: #0a1628;
-  --muted: #3f5068; /* 7.6:1 on --bg */
-  --faint: #55667d; /* 5.3:1 on --bg */
-  --landing: #0f1b2d;
-  --brand-text: #0070c0; /* darkened brand for small text: 5.2 on white */
-  --dot: 215 25% 45% / 0.10;
-  --pre-bg: #edf2f8;
+  --surface-hover: #dce6f2; /* cold white 2 */
+  --border: #cdd2d9; /* navy at 16% on cold white */
+  --fg: #0a1628; /* navy */
+  --muted: #3d4756; /* navy at 78% */
+  --faint: #5e6774; /* navy at 64% */
+  --landing: #0a1628;
+  --brand-text: #0067b8; /* deep blue for small text on light; the logo blue is fill only here */
+  --dot: 215 25% 45% / 0; /* no dot grid in identity C */
+  --pre-bg: #dce6f2;
+  --ch-em: #0a1628; /* serif keyword on light: navy */
+  --ch-focus: #0a1628;
 }
 
 /* Same wrapper as upstream (screen only), so printing keeps the light tokens. */
 @media screen {
   .dark {
-    --bg: #0a1628; /* navy deep */
-    --surface: #0f1b2d; /* navy */
-    --surface-hover: #14243b; /* navy elevation 1 */
-    --border: #1b2e47; /* navy elevation 2 */
-    --fg: #f5f8fc;
-    --muted: #a3b2c7;
-    --faint: #8b9bb0; /* 5.4:1 on --surface */
-    --landing: #e6eef8;
-    --brand-text: #0099ff; /* 6.0:1 on --bg */
-    --dot: 215 30% 70% / 0.10;
-    --pre-bg: #08111f;
+    --bg: #0a1628; /* navy */
+    --surface: #0f1b2d; /* navy 2 */
+    --surface-hover: #1d2839; /* cold white at 6% on navy 2 */
+    --border: #2f3a4a; /* cold white at 16% on navy */
+    --fg: #f2f6fb;
+    --muted: #bfc5cd; /* cold white at 78% */
+    --faint: #959ca7; /* cold white at 60% (floor is 48%) */
+    --landing: #f2f6fb;
+    --brand-text: #0099ff;
+    --dot: 215 30% 70% / 0;
+    --pre-bg: #0c1828;
+    --ch-em: #0099ff; /* serif keyword on navy: the logo blue */
+    --ch-focus: #7dd3fc; /* sky */
+  }
+}
+
+/* Headings: Bricolage 800, tighter the bigger they are. The hero h1 used the
+   Instrument Serif class from next/font; identity C keeps the serif for one
+   keyword only (<em>). */
+.font-display {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+h1.text-landing {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+:is(h1, h2, h3).text-landing em,
+.font-display em,
+.font-display > span.text-brand-text {
+  font-family: var(--font-instrument-serif-italic), var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ch-em);
+}
+
+/* Logo: the CoderHub isotipo (app/icon.svg, served at /icon.svg) in place of
+   upstream's "co" mark, and "CoderHub OS" in Bricolage 800 in the sidebar and
+   the mobile header. */
+span[aria-hidden="true"].rounded-md.bg-brand.text-white {
+  font-size: 0 !important;
+  background: url("/icon.svg") center / contain no-repeat;
+  border-radius: 0;
+}
+aside > a[href="/"] > span.text-landing,
+a[aria-label="CoderHub OS home"] > span.text-landing {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* Uppercase is mono only in identity C: section labels, badges and pills set
+   in uppercase take JetBrains Mono with tracking .05em (upstream spaces them
+   .16em-.2em in the sans, which wraps on a phone). */
+.uppercase {
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+:is(h2, h3).uppercase {
+  white-space: nowrap; /* "FOLLOW-UPS DUE" broke at the hyphen on a phone */
+}
+
+/* Primary buttons: blue pill with navy text and the blue glow (the only glow
+   in identity C). Without an icon of their own they get the navy circle with
+   the light-blue arrow on the right, which turns 45° on hover. */
+:is(a, button).bg-brand.text-brand-foreground:is(.px-4, .px-5) {
+  border-radius: 100px;
+  font-weight: 700;
+  box-shadow: 0 0 44px rgba(0, 153, 255, 0.28);
+  transition: background-color 0.25s, box-shadow 0.25s, transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+:is(a, button).bg-brand.text-brand-foreground:is(.px-4, .px-5):hover {
+  box-shadow: 0 0 60px rgba(0, 153, 255, 0.42);
+}
+:is(a, button).bg-brand.text-brand-foreground:is(.px-4, .px-5):not(:has(svg)) {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 5px;
+}
+:is(a, button).bg-brand.text-brand-foreground:is(.px-4, .px-5):not(:has(svg))::after {
+  content: "";
+  flex: none;
+  width: 1.9em;
+  height: 1.9em;
+  border-radius: 50%;
+  background: #0a1628 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2327B2FF' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7M8 7h9v9'/%3E%3C/svg%3E") center / 52% no-repeat;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+:is(a, button).bg-brand.text-brand-foreground:is(.px-4, .px-5):not(:has(svg)):hover::after {
+  transform: rotate(45deg);
+}
+/* On a phone, a button that sits next to a text field (the job-URL box, for
+   one) leaves the field its width: no circle there. */
+@media (max-width: 639px) {
+  :has(> input, > * > input) > :is(a, button).bg-brand.text-brand-foreground:is(.px-4, .px-5):not(:has(svg)) {
+    padding-right: revert-layer;
+  }
+  :has(> input, > * > input) > :is(a, button).bg-brand.text-brand-foreground:is(.px-4, .px-5):not(:has(svg))::after {
+    display: none;
+  }
+}
+
+/* No animated gradient glow (identity C has no gradients or blobs). */
+.absolute.inset-0.z-0.animate-fade-in-delayed {
+  display: none;
+}
+
+/* Visible focus: navy on light, sky on navy. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--ch-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(a, button).bg-brand.text-brand-foreground::after {
+    transition: none;
   }
 }
 /* coderhub:end web-colors */
