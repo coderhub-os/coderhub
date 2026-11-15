@@ -195,7 +195,7 @@ export function TodayDashboard({
             ) : heroState === "unavailable" ? (
               <>Some updates are unavailable.</>
             ) : allClear ? (
-              <>You&apos;re all caught up.</>
+              <>You&apos;re all <em>caught up.</em>{/* coderhub (D22) */}</>
             ) : showsQueue(heroState) ? (
               <>
                 {queueLead.map((item, index) => (
