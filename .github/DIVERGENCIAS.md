@@ -124,3 +124,4 @@ Desde v2.3.0 (D24) el updater de un cliente busca el release en **su propio repo
 | v2.0.0 | v1.37.0 (`0b35a138`, 175 commits después del tag) |
 | v2.1.0 | v1.37.0 (`0b35a138`, igual que v2.0.0) |
 | v2.2.0 | v1.40.0 (`9170fed5`, el tag del release) |
+| v2.3.0 | v1.40.0 (`9170fed5`, igual que v2.2.0) |
