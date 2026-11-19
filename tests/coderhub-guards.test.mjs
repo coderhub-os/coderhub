@@ -34,11 +34,16 @@ for (const rel of ['update-system.mjs', 'user-agent.mjs', 'modes/update.md']) {
 // 2. D1 — updater constants and tag prefix.
 const updater = read('update-system.mjs');
 const d1 = [
-  "const CANONICAL_REPO = 'https://github.com/coderhub-os/coderhub.git';",
+  "const TEMPLATE_REPO = 'https://github.com/coderhub-os/coderhub.git';",
+  'const CANONICAL_REPO = CLIENT_REPO_SLUG ? ORIGIN_URL : TEMPLATE_REPO; // coderhub (D24)',
   "const RELEASE_TAG_PREFIX = 'coderhub-v';",
+  // coderhub (D24): a client install fetches from its own repo, not the template.
+  'if (CLIENT_REPO_SLUG) return clientRefCommit(refspec);',
+  '// coderhub:start client-target (D24)',
+  '// coderhub:start client-check (D24)',
 ];
 const missingD1 = d1.filter((s) => !updater.includes(s));
-if (missingD1.length === 0) pass('update-system.mjs keeps the D1 repo and tag prefix');
+if (missingD1.length === 0) pass('update-system.mjs keeps the D1 repo, tag prefix and D24 client-repo fetch');
 else fail(`update-system.mjs lost D1: ${missingD1.join(' | ')}`);
 
 // 3. SYSTEM_PATHS ships the CoderHub layer to clients. Since upstream v1.40.0

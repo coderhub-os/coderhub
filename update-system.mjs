@@ -128,7 +128,137 @@ function isLegacyReexec() {
   }
 }
 
-const CANONICAL_REPO = 'https://github.com/coderhub-os/coderhub.git';
+// coderhub:start client-repo (D24)
+// The template repo (CANONICAL_REPO) is meant to go private. Each client works
+// in its own private repo, coderhub-os/coderhub-<name>, and CoderHub pushes
+// every release tag there. When origin is such a repo, this install updates
+// from origin over git, with the client's own git credentials, and never asks
+// the template or anonymous GitHub endpoints.
+/**
+ * The `coderhub-os/coderhub-<name>` slug a remote URL names, or '' for any
+ * other remote (the template itself, a fork, a local path).
+ * @param {string} remoteUrl
+ * @returns {string}
+ */
+export function clientRepoSlug(remoteUrl) {
+  const match = String(remoteUrl || '').trim()
+    .match(/github\.com[:/]+(coderhub-os\/coderhub-[A-Za-z0-9._-]+?)(?:\.git)?\/?$/i);
+  return match ? match[1] : '';
+}
+
+function originRemoteUrl() {
+  try {
+    return execFileSync('git', ['config', '--get', 'remote.origin.url'], {
+      cwd: ROOT, encoding: 'utf-8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    return '';
+  }
+}
+
+const ORIGIN_URL = originRemoteUrl();
+export const CLIENT_REPO_SLUG = clientRepoSlug(ORIGIN_URL);
+
+/**
+ * `git ls-remote` against the client's origin, with its stored credentials
+ * (credential helper or SSH key) but never an interactive prompt.
+ * @param {string[]} flags - options before the URL (e.g. `--tags`).
+ * @param {string[]} refs - patterns after the URL.
+ * @returns {{ok: true, out: string} | {ok: false, detail: string}}
+ */
+export function clientLsRemote(flags = [], refs = [], url = ORIGIN_URL) {
+  try {
+    const out = execFileSync('git', ['ls-remote', ...flags, url, ...refs], {
+      cwd: ROOT,
+      encoding: 'utf-8',
+      timeout: 20000,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        GIT_TERMINAL_PROMPT: '0',
+        GCM_INTERACTIVE: 'never',
+        GIT_SSH_COMMAND: process.env.GIT_SSH_COMMAND || 'ssh -o BatchMode=yes',
+      },
+    });
+    return { ok: true, out };
+  } catch (error) {
+    const line = String(error.stderr || '').trim().split('\n')[0].replace(/\r$/, '');
+    return { ok: false, detail: line || error.code || String(error.message || error).split('\n')[0] };
+  }
+}
+
+/**
+ * The newest release tag name in `git ls-remote --tags` output, or ''.
+ * @param {string} lsRemoteOutput
+ * @returns {string}
+ */
+export function highestReleaseTagName(lsRemoteOutput) {
+  let best = '';
+  let bestVersion = '';
+  for (const line of String(lsRemoteOutput || '').split('\n')) {
+    const tag = (line.split('\t')[1] || '')
+      .replace(/\r$/, '')
+      .replace(/^refs\/tags\//, '')
+      .replace(/\^\{\}$/, '');
+    const version = releaseTagVersion(tag);
+    if (version && (!bestVersion || compareVersions(version, bestVersion) > 0)) {
+      best = tag;
+      bestVersion = version;
+    }
+  }
+  return best;
+}
+
+/**
+ * The newest release in the client's repo, the same shape latestRelease()
+ * returns. The release notes come from the GitHub release when `gh` is logged
+ * in; without it the update is still offered, just with no changelog.
+ * @param {{lsRemote?: typeof clientLsRemote, curlGet?: typeof curlGet}} [ctx]
+ */
+export async function clientLatestRelease(ctx = {}) {
+  const probe = (ctx.lsRemote || clientLsRemote)(['--tags']);
+  if (!probe.ok) return { status: 'offline', detail: `git ls-remote origin: ${probe.detail}` };
+  const tagName = highestReleaseTagName(probe.out);
+  const version = releaseTagVersion(tagName);
+  if (!version) return { status: 'no-remote-version' };
+  let changelog = '';
+  let publishedAt = '';
+  if (ctx.curlGet || githubToken()) {
+    const raw = await (ctx.curlGet || curlGet)(`https://api.github.com/repos/${CLIENT_REPO_SLUG}/releases/tags/${tagName}`, [
+      '--header', 'Accept: application/vnd.github.v3+json',
+      '--header', 'User-Agent: career-ops-update-checker',
+    ]);
+    try {
+      const release = JSON.parse(raw || '');
+      changelog = String(release?.body || '');
+      publishedAt = String(release?.published_at || '');
+    } catch { /* no release notes: offer the update anyway */ }
+  }
+  return { status: 'ok', tagName, version, publishedAt, changelog };
+}
+
+/**
+ * The object the client's origin names for a ref (the tag object for an
+ * annotated tag, like the GitHub ref API), or '' when it cannot be read.
+ * @param {string} refspec
+ */
+function clientRefCommit(refspec, lsRemote = clientLsRemote) {
+  const probe = lsRemote([], [refspec]);
+  if (!probe.ok) return '';
+  for (const line of probe.out.split('\n')) {
+    const [sha, ref] = line.split('\t');
+    if (ref?.replace(/\r$/, '') === refspec && /^[0-9a-f]{40}$/.test(sha)) return sha;
+  }
+  return '';
+}
+
+const CLIENT_MAIN_CHANNEL_ERROR =
+  'The main channel is not available in a CoderHub OS client install: this repo only receives published releases. ' +
+  'Run `node update-system.mjs apply --confirm` without --channel.';
+// coderhub:end client-repo
+// The repo every fetch reads: the client's origin, or the template elsewhere.
+const TEMPLATE_REPO = 'https://github.com/coderhub-os/coderhub.git';
+const CANONICAL_REPO = CLIENT_REPO_SLUG ? ORIGIN_URL : TEMPLATE_REPO; // coderhub (D24)
 // Local snapshot of a withheld update's index, including preserved files.
 // A ref stays out of git status and contributor branches; trust it only while
 // its content matches the queried paths (see stagedUpdateBaseline).
@@ -139,6 +269,7 @@ const RELEASES_API = 'https://api.github.com/repos/coderhub-os/coderhub/releases
 // check() has always read it for main; apply() now reads it for the ref it is
 // installing, so the tree is checked against the ref it claims to be (#3052).
 const UPSTREAM_REF_API = 'https://api.github.com/repos/coderhub-os/coderhub/git/ref'; // coderhub (D1)
+
 
 // Matches a semver, with or without a leading `v` and an optional
 // Release Please component prefix (e.g. `career-ops-v1.9.0` → `1.9.0`).
@@ -3733,6 +3864,7 @@ export function authoritativeShaFromRefBody(raw) {
  * @returns {Promise<string>} An object SHA, or '' when unavailable.
  */
 async function upstreamRefCommit(refspec, runCurlGet = curlGet) {
+  if (CLIENT_REPO_SLUG) return clientRefCommit(refspec); // coderhub (D24)
   const raw = await runCurlGet(`${UPSTREAM_REF_API}/${refspec.replace(/^refs\//, '')}`, [
     '--header', 'Accept: application/vnd.github+json',
     '--header', 'User-Agent: career-ops-update-checker',
@@ -3950,6 +4082,18 @@ export function newerThanTarget(local, targetRef) {
  */
 export async function resolveTargetRef(argv, env, ctx = {}) {
   const runCurlGet = ctx.curlGet || curlGet;
+  // coderhub:start client-target (D24)
+  if (CLIENT_REPO_SLUG && !ctx.curlGet) {
+    if (resolveChannel(argv, env) === 'main') throw new Error(CLIENT_MAIN_CHANNEL_ERROR);
+    const latest = await clientLatestRelease();
+    if (latest.status === 'ok') return latest.tagName;
+    throw new Error(
+      `Could not read the CoderHub OS releases from your repo (${ORIGIN_URL}). Nothing was changed. ` +
+      (latest.detail ? `git said: ${latest.detail}. ` : 'It has no release tag yet. ') +
+      'Check your connection and that `git fetch` works in this folder, then retry.',
+    );
+  }
+  // coderhub:end client-target
   if (resolveChannel(argv, env) === 'main') {
     return 'main';
   }
@@ -4132,9 +4276,13 @@ export async function checkStatus(argv, env, ctx = {}) {
   const local = (ctx.localVersion || localVersion)();
   const localSha = (ctx.localShortSha || localShortSha)();
   const marker = argv.includes('--force') ? null : parseDismissMarker((ctx.readMarker || readDismissMarker)());
+  // coderhub:start client-check (D24)
+  const clientMode = ctx.clientRelease || (CLIENT_REPO_SLUG && !ctx.curlGet);
+  if (clientMode && resolveChannel(argv, env) === 'main') return { status: 'offline', local, detail: CLIENT_MAIN_CHANNEL_ERROR };
+  // coderhub:end client-check
   if (resolveChannel(argv, env) === 'main') return checkMainChannel(local, marker, runCurlGet, localSha, ctx.gitRemoteVersion || gitRemoteVersion);
 
-  const latest = await latestRelease(runCurlGet);
+  const latest = clientMode ? await (ctx.clientRelease || clientLatestRelease)() : await latestRelease(runCurlGet); // coderhub (D24)
   // coderhub:start rate-limited-reset (D19)
   if (latest.status !== 'ok') return { status: latest.status, local, ...(localSha ? { local_sha: localSha } : {}), ...(latest.tag ? { tag: latest.tag } : {}), ...(latest.detail ? { detail: latest.detail } : {}), ...(latest.resetAt ? { resetAt: latest.resetAt } : {}) };
   // coderhub:end rate-limited-reset
